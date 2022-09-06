@@ -1,0 +1,26 @@
+{
+	"name": "@nicolasflamel/secp256k1-zkp-native",
+	"version": "0.0.6",
+	"description": "Node.js addon for parts of libsecp256k1-zkp",
+	"main": "./build/Release/secp256k1_zkp.node",
+	"gypfile": true,
+	"scripts": {
+		"preinstall": "wget -O \"./secp256k1-zkp.zip\" \"https://github.com/NicolasFlamel1/secp256k1-zkp/archive/master.zip\" && unzip \"./secp256k1-zkp.zip\" && wget -O \"./secp256k1-zkp-wrapper.zip\" \"https://github.com/NicolasFlamel1/Secp256k1-zkp-WASM-Wrapper/archive/refs/heads/master.zip\" && unzip \"./secp256k1-zkp-wrapper.zip\"",
+		"install": "node-gyp rebuild"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/NicolasFlamel1/Secp256k1-zkp-Node.js-Addon.git"
+	},
+	"keywords": [
+		"MimbleWimble Coin",
+		"secp256k1",
+		"secp256k1-zkp",
+		"mimblewimble"
+	],
+	"author": "Nicolas Flamel",
+	"license": "MIT",
+	"bugs": {
+		"url": "https://github.com/NicolasFlamel1/Secp256k1-zkp-Node.js-Addon/issues"
+	}
+}
