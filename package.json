@@ -5,7 +5,7 @@
 	"main": "./build/Release/secp256k1_zkp.node",
 	"gypfile": true,
 	"scripts": {
-		"preinstall": "wget -O \"./secp256k1-zkp.zip\" \"https://github.com/NicolasFlamel1/secp256k1-zkp/archive/master.zip\" && unzip \"./secp256k1-zkp.zip\" && wget -O \"./secp256k1-zkp-wrapper.zip\" \"https://github.com/NicolasFlamel1/Secp256k1-zkp-WASM-Wrapper/archive/refs/heads/master.zip\" && unzip \"./secp256k1-zkp-wrapper.zip\"",
+		"preinstall": "wget -O \"./secp256k1-zkp.zip\" \"https://github.com/NicolasFlamel1/secp256k1-zkp/archive/master.zip\" && unzip \"./secp256k1-zkp.zip\" && wget -O \"./secp256k1-zkp-wrapper.zip\" \"https://github.com/NicolasFlamel1/Secp256k1-zkp-WASM-Wrapper/archive/refs/heads/master.zip\" && unzip \"./secp256k1-zkp-wrapper.zip\" && sed -i 's/^\\([^\\t\\n].* [a-zA-Z0-9]*(\\)\\(.*)\\)\\(;\\| {\\)/\\1InstanceData *instanceData, \\2\\3/g' \"./Secp256k1-zkp-WASM-Wrapper-master/main.cpp\" && sed -i 's/, )/)/g' \"./Secp256k1-zkp-WASM-Wrapper-master/main.cpp\" && sed -i 's/\\(context\\|scratchSpace\\|generators\\),/instanceData->\\1,/g' \"./Secp256k1-zkp-WASM-Wrapper-master/main.cpp\" && sed -i 's/\\(isValidSecretKey(\\|isZeroArray(\\)\\([^I]\\)/\\1instanceData, \\2/g' \"./Secp256k1-zkp-WASM-Wrapper-master/main.cpp\"",
 		"install": "node-gyp rebuild"
 	},
 	"repository": {
