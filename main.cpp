@@ -2,7 +2,7 @@
 #include <cstring>
 #include <new>
 #include <node_api.h>
-#include <utility>
+#include <tuple>
 #include <vector>
 
 extern "C" {
@@ -143,7 +143,7 @@ static napi_value createMessageHashSignature(napi_env environment, napi_callback
 static napi_value verifyMessageHashSignature(napi_env environment, napi_callback_info arguments);
 
 // Uint8 array to buffer
-static pair<const uint8_t *, size_t> uint8ArrayToBuffer(napi_env environment, napi_value uint8Array);
+static tuple<uint8_t *, size_t, bool> uint8ArrayToBuffer(napi_env environment, napi_value uint8Array);
 
 // Buffer to uint8 array
 static napi_value bufferToUint8Array(napi_env environment, uint8_t *data, size_t size);
@@ -152,13 +152,13 @@ static napi_value bufferToUint8Array(napi_env environment, uint8_t *data, size_t
 static napi_value cBoolToBool(napi_env environment, bool value);
 
 // String to C string
-static string stringToCString(napi_env environment, napi_value value);
+static tuple<string, bool> stringToCString(napi_env environment, napi_value value);
 
 // Random fill
 static bool randomFill(napi_env environment, uint8_t *buffer, size_t size);
 
 // Is null
-static bool isNull(napi_env environment, napi_value value);
+static bool isNull(napi_env environment, napi_value value, bool unknownResult = true);
 
 
 // Main function
@@ -554,16 +554,16 @@ napi_value blindSwitch(napi_env environment, napi_callback_info arguments) {
 	}
 	
 	// Check if getting blind from arguments failed
-	const pair<const uint8_t *, size_t> blind = uint8ArrayToBuffer(environment, argv[0]);
-	if(!blind.first) {
+	const tuple<uint8_t *, size_t, bool> blind = uint8ArrayToBuffer(environment, argv[0]);
+	if(!get<2>(blind)) {
 	
 		// Return operation failed
 		return OPERATION_FAILED;
 	}
 	
 	// Check if getting value from arguments failed
-	const string value = stringToCString(environment, argv[1]);
-	if(value.empty()) {
+	const tuple<string, bool> value = stringToCString(environment, argv[1]);
+	if(!get<1>(value)) {
 	
 		// Return operation failed
 		return OPERATION_FAILED;
@@ -571,7 +571,7 @@ napi_value blindSwitch(napi_env environment, napi_callback_info arguments) {
 	
 	// Check if performing blind switch failed
 	uint8_t result[blindSize(instanceData)];
-	if(!blindSwitch(instanceData, result, blind.first, blind.second, value.c_str())) {
+	if(!blindSwitch(instanceData, result, get<0>(blind), get<1>(blind), get<0>(value).c_str())) {
 	
 		// Return operation failed
 		return OPERATION_FAILED;
@@ -637,8 +637,8 @@ napi_value blindSum(napi_env environment, napi_callback_info arguments) {
 		}
 		
 		// Check if getting blind as a buffer failed
-		const pair<const uint8_t *, size_t> blindBuffer = uint8ArrayToBuffer(environment, blind);
-		if(!blindBuffer.first) {
+		const tuple<uint8_t *, size_t, bool> blindBuffer = uint8ArrayToBuffer(environment, blind);
+		if(!get<2>(blindBuffer)) {
 		
 			// Clear blinds
 			explicit_bzero(blinds.data(), blinds.size());
@@ -648,10 +648,10 @@ napi_value blindSum(napi_env environment, napi_callback_info arguments) {
 		}
 		
 		// Append blind buffer to blinds
-		blinds.insert(blinds.cend(), blindBuffer.first, blindBuffer.first + blindBuffer.second);
+		blinds.insert(blinds.cend(), get<0>(blindBuffer), get<0>(blindBuffer) + get<1>(blindBuffer));
 		
 		// Append blind's size to blinds sizes
-		blindsSizes[i] = blindBuffer.second;
+		blindsSizes[i] = get<1>(blindBuffer);
 	}
 	
 	// Go through all negative blinds
@@ -669,8 +669,8 @@ napi_value blindSum(napi_env environment, napi_callback_info arguments) {
 		}
 		
 		// Check if getting blind as a buffer failed
-		const pair<const uint8_t *, size_t> blindBuffer = uint8ArrayToBuffer(environment, blind);
-		if(!blindBuffer.first) {
+		const tuple<uint8_t *, size_t, bool> blindBuffer = uint8ArrayToBuffer(environment, blind);
+		if(!get<2>(blindBuffer)) {
 		
 			// Clear blinds
 			explicit_bzero(blinds.data(), blinds.size());
@@ -680,10 +680,10 @@ napi_value blindSum(napi_env environment, napi_callback_info arguments) {
 		}
 		
 		// Append blind buffer to blinds
-		blinds.insert(blinds.cend(), blindBuffer.first, blindBuffer.first + blindBuffer.second);
+		blinds.insert(blinds.cend(), get<0>(blindBuffer), get<0>(blindBuffer) + get<1>(blindBuffer));
 		
 		// Append blind's size to blinds sizes
-		blindsSizes[i + numberOfPositiveBlinds] = blindBuffer.second;
+		blindsSizes[i + numberOfPositiveBlinds] = get<1>(blindBuffer);
 	}
 	
 	// Check if performing blind sum failed
@@ -725,15 +725,15 @@ napi_value isValidSecretKey(napi_env environment, napi_callback_info arguments) 
 	}
 	
 	// Check if getting secret key from arguments failed
-	const pair<const uint8_t *, size_t> secretKey = uint8ArrayToBuffer(environment, argv[0]);
-	if(!secretKey.first) {
+	const tuple<uint8_t *, size_t, bool> secretKey = uint8ArrayToBuffer(environment, argv[0]);
+	if(!get<2>(secretKey)) {
 	
 		// Return false as a bool
 		return cBoolToBool(environment, false);
 	}
 	
 	// Check if secret key is not a valid secret key
-	if(!isValidSecretKey(instanceData, secretKey.first, secretKey.second)) {
+	if(!isValidSecretKey(instanceData, get<0>(secretKey), get<1>(secretKey))) {
 	
 		// Return false as a bool
 		return cBoolToBool(environment, false);
@@ -764,15 +764,15 @@ napi_value isValidPublicKey(napi_env environment, napi_callback_info arguments) 
 	}
 	
 	// Check if getting public key from arguments failed
-	const pair<const uint8_t *, size_t> publicKey = uint8ArrayToBuffer(environment, argv[0]);
-	if(!publicKey.first) {
+	const tuple<uint8_t *, size_t, bool> publicKey = uint8ArrayToBuffer(environment, argv[0]);
+	if(!get<2>(publicKey)) {
 	
 		// Return false as a bool
 		return cBoolToBool(environment, false);
 	}
 	
 	// Check if public key is not a valid public key
-	if(!isValidPublicKey(instanceData, publicKey.first, publicKey.second)) {
+	if(!isValidPublicKey(instanceData, get<0>(publicKey), get<1>(publicKey))) {
 	
 		// Return false as a bool
 		return cBoolToBool(environment, false);
@@ -803,15 +803,15 @@ napi_value isValidCommit(napi_env environment, napi_callback_info arguments) {
 	}
 	
 	// Check if getting commit from arguments failed
-	const pair<const uint8_t *, size_t> commit = uint8ArrayToBuffer(environment, argv[0]);
-	if(!commit.first) {
+	const tuple<uint8_t *, size_t, bool> commit = uint8ArrayToBuffer(environment, argv[0]);
+	if(!get<2>(commit)) {
 	
 		// Return false as a bool
 		return cBoolToBool(environment, false);
 	}
 	
 	// Check if commit is not a valid commit
-	if(!isValidCommit(instanceData, commit.first, commit.second)) {
+	if(!isValidCommit(instanceData, get<0>(commit), get<1>(commit))) {
 	
 		// Return false as a bool
 		return cBoolToBool(environment, false);
@@ -842,15 +842,15 @@ napi_value isValidSingleSignerSignature(napi_env environment, napi_callback_info
 	}
 	
 	// Check if getting signature from arguments failed
-	const pair<const uint8_t *, size_t> signature = uint8ArrayToBuffer(environment, argv[0]);
-	if(!signature.first) {
+	const tuple<uint8_t *, size_t, bool> signature = uint8ArrayToBuffer(environment, argv[0]);
+	if(!get<2>(signature)) {
 	
 		// Return false as a bool
 		return cBoolToBool(environment, false);
 	}
 	
 	// Check if signature is not a valid single-signer signature
-	if(!isValidSingleSignerSignature(instanceData, signature.first, signature.second)) {
+	if(!isValidSingleSignerSignature(instanceData, get<0>(signature), get<1>(signature))) {
 	
 		// Return false as a bool
 		return cBoolToBool(environment, false);
@@ -881,48 +881,48 @@ napi_value createBulletproof(napi_env environment, napi_callback_info arguments)
 	}
 	
 	// Check if getting blind from arguments failed
-	const pair<const uint8_t *, size_t> blind = uint8ArrayToBuffer(environment, argv[0]);
-	if(!blind.first) {
+	const tuple<uint8_t *, size_t, bool> blind = uint8ArrayToBuffer(environment, argv[0]);
+	if(!get<2>(blind)) {
 	
 		// Return operation failed
 		return OPERATION_FAILED;
 	}
 	
 	// Check if getting value from arguments failed
-	const string value = stringToCString(environment, argv[1]);
-	if(value.empty()) {
+	const tuple<string, bool> value = stringToCString(environment, argv[1]);
+	if(!get<1>(value)) {
 	
 		// Return operation failed
 		return OPERATION_FAILED;
 	}
 	
 	// Check if getting nonce from arguments failed
-	const pair<const uint8_t *, size_t> nonce = uint8ArrayToBuffer(environment, argv[2]);
-	if(!nonce.first) {
+	const tuple<uint8_t *, size_t, bool> nonce = uint8ArrayToBuffer(environment, argv[2]);
+	if(!get<2>(nonce)) {
 	
 		// Return operation failed
 		return OPERATION_FAILED;
 	}
 	
 	// Check if getting private nonce from arguments failed
-	const pair<const uint8_t *, size_t> privateNonce = uint8ArrayToBuffer(environment, argv[3]);
-	if(!privateNonce.first) {
+	const tuple<uint8_t *, size_t, bool> privateNonce = uint8ArrayToBuffer(environment, argv[3]);
+	if(!get<2>(privateNonce)) {
 	
 		// Return operation failed
 		return OPERATION_FAILED;
 	}
 	
 	// Check if getting extra commit from arguments failed
-	const pair<const uint8_t *, size_t> extraCommit = uint8ArrayToBuffer(environment, argv[4]);
-	if(!extraCommit.first) {
+	const tuple<uint8_t *, size_t, bool> extraCommit = uint8ArrayToBuffer(environment, argv[4]);
+	if(!get<2>(extraCommit)) {
 	
 		// Return operation failed
 		return OPERATION_FAILED;
 	}
 	
 	// Check if getting message from arguments failed
-	const pair<const uint8_t *, size_t> message = uint8ArrayToBuffer(environment, argv[5]);
-	if(!message.first) {
+	const tuple<uint8_t *, size_t, bool> message = uint8ArrayToBuffer(environment, argv[5]);
+	if(!get<2>(message)) {
 	
 		// Return operation failed
 		return OPERATION_FAILED;
@@ -931,7 +931,7 @@ napi_value createBulletproof(napi_env environment, napi_callback_info arguments)
 	// Check if creating bulletproof failed
 	uint8_t proof[bulletproofProofSize(instanceData)];
 	char proofSize[MAX_64_BIT_INTEGER_STRING_LENGTH];
-	if(!createBulletproof(instanceData, proof, proofSize, blind.first, blind.second, value.c_str(), nonce.first, nonce.second, privateNonce.first, privateNonce.second, extraCommit.first, extraCommit.second, message.first, message.second)) {
+	if(!createBulletproof(instanceData, proof, proofSize, get<0>(blind), get<1>(blind), get<0>(value).c_str(), get<0>(nonce), get<1>(nonce), get<0>(privateNonce), get<1>(privateNonce), get<0>(extraCommit), get<1>(extraCommit), get<0>(message), get<1>(message))) {
 	
 		// Return operation failed
 		return OPERATION_FAILED;
@@ -962,64 +962,64 @@ napi_value createBulletproofBlindless(napi_env environment, napi_callback_info a
 	}
 	
 	// Check if getting tau x from arguments failed
-	const pair<const uint8_t *, size_t> tauX = uint8ArrayToBuffer(environment, argv[0]);
-	if(!tauX.first) {
+	const tuple<uint8_t *, size_t, bool> tauX = uint8ArrayToBuffer(environment, argv[0]);
+	if(!get<2>(tauX)) {
 	
 		// Return operation failed
 		return OPERATION_FAILED;
 	}
 	
 	// Check if getting t one from arguments failed
-	const pair<const uint8_t *, size_t> tOne = uint8ArrayToBuffer(environment, argv[1]);
-	if(!tOne.first) {
+	const tuple<uint8_t *, size_t, bool> tOne = uint8ArrayToBuffer(environment, argv[1]);
+	if(!get<2>(tOne)) {
 	
 		// Return operation failed
 		return OPERATION_FAILED;
 	}
 	
 	// Check if getting t two from arguments failed
-	const pair<const uint8_t *, size_t> tTwo = uint8ArrayToBuffer(environment, argv[2]);
-	if(!tTwo.first) {
+	const tuple<uint8_t *, size_t, bool> tTwo = uint8ArrayToBuffer(environment, argv[2]);
+	if(!get<2>(tTwo)) {
 	
 		// Return operation failed
 		return OPERATION_FAILED;
 	}
 	
 	// Check if getting commit from arguments failed
-	const pair<const uint8_t *, size_t> commit = uint8ArrayToBuffer(environment, argv[3]);
-	if(!commit.first) {
+	const tuple<uint8_t *, size_t, bool> commit = uint8ArrayToBuffer(environment, argv[3]);
+	if(!get<2>(commit)) {
 	
 		// Return operation failed
 		return OPERATION_FAILED;
 	}
 	
 	// Check if getting value from arguments failed
-	const string value = stringToCString(environment, argv[4]);
-	if(value.empty()) {
+	const tuple<string, bool> value = stringToCString(environment, argv[4]);
+	if(!get<1>(value)) {
 	
 		// Return operation failed
 		return OPERATION_FAILED;
 	}
 	
 	// Check if getting nonce from arguments failed
-	const pair<const uint8_t *, size_t> nonce = uint8ArrayToBuffer(environment, argv[5]);
-	if(!nonce.first) {
+	const tuple<uint8_t *, size_t, bool> nonce = uint8ArrayToBuffer(environment, argv[5]);
+	if(!get<2>(nonce)) {
 	
 		// Return operation failed
 		return OPERATION_FAILED;
 	}
 	
 	// Check if getting extra commit from arguments failed
-	const pair<const uint8_t *, size_t> extraCommit = uint8ArrayToBuffer(environment, argv[6]);
-	if(!extraCommit.first) {
+	const tuple<uint8_t *, size_t, bool> extraCommit = uint8ArrayToBuffer(environment, argv[6]);
+	if(!get<2>(extraCommit)) {
 	
 		// Return operation failed
 		return OPERATION_FAILED;
 	}
 	
 	// Check if getting message from arguments failed
-	const pair<const uint8_t *, size_t> message = uint8ArrayToBuffer(environment, argv[7]);
-	if(!message.first) {
+	const tuple<uint8_t *, size_t, bool> message = uint8ArrayToBuffer(environment, argv[7]);
+	if(!get<2>(message)) {
 	
 		// Return operation failed
 		return OPERATION_FAILED;
@@ -1028,7 +1028,7 @@ napi_value createBulletproofBlindless(napi_env environment, napi_callback_info a
 	// Check if creating bulletproof blindless failed
 	uint8_t proof[bulletproofProofSize(instanceData)];
 	char proofSize[MAX_64_BIT_INTEGER_STRING_LENGTH];
-	if(!createBulletproofBlindless(instanceData, proof, proofSize, const_cast<uint8_t *>(tauX.first), tauX.second, tOne.first, tOne.second, tTwo.first, tTwo.second, commit.first, commit.second, value.c_str(), nonce.first, nonce.second, extraCommit.first, extraCommit.second, message.first, message.second)) {
+	if(!createBulletproofBlindless(instanceData, proof, proofSize, get<0>(tauX), get<1>(tauX), get<0>(tOne), get<1>(tOne), get<0>(tTwo), get<1>(tTwo), get<0>(commit), get<1>(commit), get<0>(value).c_str(), get<0>(nonce), get<1>(nonce), get<0>(extraCommit), get<1>(extraCommit), get<0>(message), get<1>(message))) {
 	
 		// Return operation failed
 		return OPERATION_FAILED;
@@ -1059,24 +1059,24 @@ napi_value rewindBulletproof(napi_env environment, napi_callback_info arguments)
 	}
 	
 	// Check if getting proof from arguments failed
-	const pair<const uint8_t *, size_t> proof = uint8ArrayToBuffer(environment, argv[0]);
-	if(!proof.first) {
+	const tuple<uint8_t *, size_t, bool> proof = uint8ArrayToBuffer(environment, argv[0]);
+	if(!get<2>(proof)) {
 	
 		// Return operation failed
 		return OPERATION_FAILED;
 	}
 	
 	// Check if getting commit from arguments failed
-	const pair<const uint8_t *, size_t> commit = uint8ArrayToBuffer(environment, argv[1]);
-	if(!commit.first) {
+	const tuple<uint8_t *, size_t, bool> commit = uint8ArrayToBuffer(environment, argv[1]);
+	if(!get<2>(commit)) {
 	
 		// Return operation failed
 		return OPERATION_FAILED;
 	}
 	
 	// Check if getting nonce from arguments failed
-	const pair<const uint8_t *, size_t> nonce = uint8ArrayToBuffer(environment, argv[2]);
-	if(!nonce.first) {
+	const tuple<uint8_t *, size_t, bool> nonce = uint8ArrayToBuffer(environment, argv[2]);
+	if(!get<2>(nonce)) {
 	
 		// Return operation failed
 		return OPERATION_FAILED;
@@ -1086,7 +1086,7 @@ napi_value rewindBulletproof(napi_env environment, napi_callback_info arguments)
 	char value[MAX_64_BIT_INTEGER_STRING_LENGTH];
 	uint8_t blind[blindSize(instanceData)];
 	uint8_t message[bulletproofMessageSize(instanceData)];
-	if(!rewindBulletproof(instanceData, value, blind, message, proof.first, proof.second, commit.first, commit.second, nonce.first, nonce.second)) {
+	if(!rewindBulletproof(instanceData, value, blind, message, get<0>(proof), get<1>(proof), get<0>(commit), get<1>(commit), get<0>(nonce), get<1>(nonce))) {
 	
 		// Return operation failed
 		return OPERATION_FAILED;
@@ -1149,31 +1149,31 @@ napi_value verifyBulletproof(napi_env environment, napi_callback_info arguments)
 	}
 	
 	// Check if getting proof from arguments failed
-	const pair<const uint8_t *, size_t> proof = uint8ArrayToBuffer(environment, argv[0]);
-	if(!proof.first) {
+	const tuple<uint8_t *, size_t, bool> proof = uint8ArrayToBuffer(environment, argv[0]);
+	if(!get<2>(proof)) {
 	
 		// Return false as a bool
 		return cBoolToBool(environment, false);
 	}
 	
 	// Check if getting commit from arguments failed
-	const pair<const uint8_t *, size_t> commit = uint8ArrayToBuffer(environment, argv[1]);
-	if(!commit.first) {
+	const tuple<uint8_t *, size_t, bool> commit = uint8ArrayToBuffer(environment, argv[1]);
+	if(!get<2>(commit)) {
 	
 		// Return false as a bool
 		return cBoolToBool(environment, false);
 	}
 	
 	// Check if getting extra commit from arguments failed
-	const pair<const uint8_t *, size_t> extraCommit = uint8ArrayToBuffer(environment, argv[2]);
-	if(!extraCommit.first) {
+	const tuple<uint8_t *, size_t, bool> extraCommit = uint8ArrayToBuffer(environment, argv[2]);
+	if(!get<2>(extraCommit)) {
 	
 		// Return false as a bool
 		return cBoolToBool(environment, false);
 	}
 	
 	// Check if bulletproof isn't verified
-	if(!verifyBulletproof(instanceData, proof.first, proof.second, commit.first, commit.second, extraCommit.first, extraCommit.second)) {
+	if(!verifyBulletproof(instanceData, get<0>(proof), get<1>(proof), get<0>(commit), get<1>(commit), get<0>(extraCommit), get<1>(extraCommit))) {
 	
 		// Return false as a bool
 		return cBoolToBool(environment, false);
@@ -1204,8 +1204,8 @@ napi_value publicKeyFromSecretKey(napi_env environment, napi_callback_info argum
 	}
 	
 	// Check if getting secret key from arguments failed
-	const pair<const uint8_t *, size_t> secretKey = uint8ArrayToBuffer(environment, argv[0]);
-	if(!secretKey.first) {
+	const tuple<uint8_t *, size_t, bool> secretKey = uint8ArrayToBuffer(environment, argv[0]);
+	if(!get<2>(secretKey)) {
 	
 		// Return operation failed
 		return OPERATION_FAILED;
@@ -1213,7 +1213,7 @@ napi_value publicKeyFromSecretKey(napi_env environment, napi_callback_info argum
 	
 	// Check if getting public key from secret key failed
 	uint8_t publicKey[publicKeySize(instanceData)];
-	if(!publicKeyFromSecretKey(instanceData, publicKey, secretKey.first, secretKey.second)) {
+	if(!publicKeyFromSecretKey(instanceData, publicKey, get<0>(secretKey), get<1>(secretKey))) {
 	
 		// Return operation failed
 		return OPERATION_FAILED;
@@ -1244,8 +1244,8 @@ napi_value publicKeyFromData(napi_env environment, napi_callback_info arguments)
 	}
 	
 	// Check if getting data from arguments failed
-	const pair<const uint8_t *, size_t> data = uint8ArrayToBuffer(environment, argv[0]);
-	if(!data.first) {
+	const tuple<uint8_t *, size_t, bool> data = uint8ArrayToBuffer(environment, argv[0]);
+	if(!get<2>(data)) {
 	
 		// Return operation failed
 		return OPERATION_FAILED;
@@ -1253,7 +1253,7 @@ napi_value publicKeyFromData(napi_env environment, napi_callback_info arguments)
 	
 	// Check if getting public key from data failed
 	uint8_t publicKey[publicKeySize(instanceData)];
-	if(!publicKeyFromData(instanceData, publicKey, data.first, data.second)) {
+	if(!publicKeyFromData(instanceData, publicKey, get<0>(data), get<1>(data))) {
 	
 		// Return operation failed
 		return OPERATION_FAILED;
@@ -1284,8 +1284,8 @@ napi_value uncompressPublicKey(napi_env environment, napi_callback_info argument
 	}
 	
 	// Check if getting public key from arguments failed
-	const pair<const uint8_t *, size_t> publicKey = uint8ArrayToBuffer(environment, argv[0]);
-	if(!publicKey.first) {
+	const tuple<uint8_t *, size_t, bool> publicKey = uint8ArrayToBuffer(environment, argv[0]);
+	if(!get<2>(publicKey)) {
 	
 		// Return operation failed
 		return OPERATION_FAILED;
@@ -1293,7 +1293,7 @@ napi_value uncompressPublicKey(napi_env environment, napi_callback_info argument
 	
 	// Check if uncompressing the public key failed
 	uint8_t uncompressedPublicKey[uncompressedPublicKeySize(instanceData)];
-	if(!uncompressPublicKey(instanceData, uncompressedPublicKey, publicKey.first, publicKey.second)) {
+	if(!uncompressPublicKey(instanceData, uncompressedPublicKey, get<0>(publicKey), get<1>(publicKey))) {
 	
 		// Return operation failed
 		return OPERATION_FAILED;
@@ -1324,30 +1324,30 @@ napi_value secretKeyTweakAdd(napi_env environment, napi_callback_info arguments)
 	}
 	
 	// Check if getting secret key from arguments failed
-	const pair<const uint8_t *, size_t> secretKey = uint8ArrayToBuffer(environment, argv[0]);
-	if(!secretKey.first) {
+	const tuple<uint8_t *, size_t, bool> secretKey = uint8ArrayToBuffer(environment, argv[0]);
+	if(!get<2>(secretKey)) {
 	
 		// Return operation failed
 		return OPERATION_FAILED;
 	}
 	
 	// Check if getting tweak from arguments failed
-	const pair<const uint8_t *, size_t> tweak = uint8ArrayToBuffer(environment, argv[1]);
-	if(!tweak.first) {
+	const tuple<uint8_t *, size_t, bool> tweak = uint8ArrayToBuffer(environment, argv[1]);
+	if(!get<2>(tweak)) {
 	
 		// Return operation failed
 		return OPERATION_FAILED;
 	}
 	
 	// Check if performing secret key tweak add failed
-	if(!secretKeyTweakAdd(instanceData, const_cast<uint8_t *>(secretKey.first), secretKey.second, tweak.first, tweak.second)) {
+	if(!secretKeyTweakAdd(instanceData, get<0>(secretKey), get<1>(secretKey), get<0>(tweak), get<1>(tweak))) {
 	
 		// Return operation failed
 		return OPERATION_FAILED;
 	}
 	
 	// Return secret key as a uint8 array
-	return bufferToUint8Array(environment, const_cast<uint8_t *>(secretKey.first), secretKey.second);
+	return bufferToUint8Array(environment, get<0>(secretKey), get<1>(secretKey));
 }
 
 // Public key tweak add
@@ -1371,30 +1371,30 @@ napi_value publicKeyTweakAdd(napi_env environment, napi_callback_info arguments)
 	}
 	
 	// Check if getting public key from arguments failed
-	const pair<const uint8_t *, size_t> publicKey = uint8ArrayToBuffer(environment, argv[0]);
-	if(!publicKey.first) {
+	const tuple<uint8_t *, size_t, bool> publicKey = uint8ArrayToBuffer(environment, argv[0]);
+	if(!get<2>(publicKey)) {
 	
 		// Return operation failed
 		return OPERATION_FAILED;
 	}
 	
 	// Check if getting tweak from arguments failed
-	const pair<const uint8_t *, size_t> tweak = uint8ArrayToBuffer(environment, argv[1]);
-	if(!tweak.first) {
+	const tuple<uint8_t *, size_t, bool> tweak = uint8ArrayToBuffer(environment, argv[1]);
+	if(!get<2>(tweak)) {
 	
 		// Return operation failed
 		return OPERATION_FAILED;
 	}
 	
 	// Check if performing public key tweak add failed
-	if(!publicKeyTweakAdd(instanceData, const_cast<uint8_t *>(publicKey.first), publicKey.second, tweak.first, tweak.second)) {
+	if(!publicKeyTweakAdd(instanceData, get<0>(publicKey), get<1>(publicKey), get<0>(tweak), get<1>(tweak))) {
 	
 		// Return operation failed
 		return OPERATION_FAILED;
 	}
 	
 	// Return public key as a uint8 array
-	return bufferToUint8Array(environment, const_cast<uint8_t *>(publicKey.first), publicKey.second);
+	return bufferToUint8Array(environment, get<0>(publicKey), get<1>(publicKey));
 }
 
 // Secret key tweak multiply
@@ -1418,30 +1418,30 @@ napi_value secretKeyTweakMultiply(napi_env environment, napi_callback_info argum
 	}
 	
 	// Check if getting secret key from arguments failed
-	const pair<const uint8_t *, size_t> secretKey = uint8ArrayToBuffer(environment, argv[0]);
-	if(!secretKey.first) {
+	const tuple<uint8_t *, size_t, bool> secretKey = uint8ArrayToBuffer(environment, argv[0]);
+	if(!get<2>(secretKey)) {
 	
 		// Return operation failed
 		return OPERATION_FAILED;
 	}
 	
 	// Check if getting tweak from arguments failed
-	const pair<const uint8_t *, size_t> tweak = uint8ArrayToBuffer(environment, argv[1]);
-	if(!tweak.first) {
+	const tuple<uint8_t *, size_t, bool> tweak = uint8ArrayToBuffer(environment, argv[1]);
+	if(!get<2>(tweak)) {
 	
 		// Return operation failed
 		return OPERATION_FAILED;
 	}
 	
 	// Check if performing secret key tweak multiply failed
-	if(!secretKeyTweakMultiply(instanceData, const_cast<uint8_t *>(secretKey.first), secretKey.second, tweak.first, tweak.second)) {
+	if(!secretKeyTweakMultiply(instanceData, get<0>(secretKey), get<1>(secretKey), get<0>(tweak), get<1>(tweak))) {
 	
 		// Return operation failed
 		return OPERATION_FAILED;
 	}
 	
 	// Return secret key as a uint8 array
-	return bufferToUint8Array(environment, const_cast<uint8_t *>(secretKey.first), secretKey.second);
+	return bufferToUint8Array(environment, get<0>(secretKey), get<1>(secretKey));
 }
 
 // Public key tweak multiply
@@ -1465,30 +1465,30 @@ napi_value publicKeyTweakMultiply(napi_env environment, napi_callback_info argum
 	}
 	
 	// Check if getting public key from arguments failed
-	const pair<const uint8_t *, size_t> publicKey = uint8ArrayToBuffer(environment, argv[0]);
-	if(!publicKey.first) {
+	const tuple<uint8_t *, size_t, bool> publicKey = uint8ArrayToBuffer(environment, argv[0]);
+	if(!get<2>(publicKey)) {
 	
 		// Return operation failed
 		return OPERATION_FAILED;
 	}
 	
 	// Check if getting tweak from arguments failed
-	const pair<const uint8_t *, size_t> tweak = uint8ArrayToBuffer(environment, argv[1]);
-	if(!tweak.first) {
+	const tuple<uint8_t *, size_t, bool> tweak = uint8ArrayToBuffer(environment, argv[1]);
+	if(!get<2>(tweak)) {
 	
 		// Return operation failed
 		return OPERATION_FAILED;
 	}
 	
 	// Check if performing public key tweak multiply failed
-	if(!publicKeyTweakMultiply(instanceData, const_cast<uint8_t *>(publicKey.first), publicKey.second, tweak.first, tweak.second)) {
+	if(!publicKeyTweakMultiply(instanceData, get<0>(publicKey), get<1>(publicKey), get<0>(tweak), get<1>(tweak))) {
 	
 		// Return operation failed
 		return OPERATION_FAILED;
 	}
 	
 	// Return public key as a uint8 array
-	return bufferToUint8Array(environment, const_cast<uint8_t *>(publicKey.first), publicKey.second);
+	return bufferToUint8Array(environment, get<0>(publicKey), get<1>(publicKey));
 }
 
 // Shared secret key from secret key and public key
@@ -1512,16 +1512,16 @@ napi_value sharedSecretKeyFromSecretKeyAndPublicKey(napi_env environment, napi_c
 	}
 	
 	// Check if getting secret key from arguments failed
-	const pair<const uint8_t *, size_t> secretKey = uint8ArrayToBuffer(environment, argv[0]);
-	if(!secretKey.first) {
+	const tuple<uint8_t *, size_t, bool> secretKey = uint8ArrayToBuffer(environment, argv[0]);
+	if(!get<2>(secretKey)) {
 	
 		// Return operation failed
 		return OPERATION_FAILED;
 	}
 	
 	// Check if getting public key from arguments failed
-	const pair<const uint8_t *, size_t> publicKey = uint8ArrayToBuffer(environment, argv[1]);
-	if(!publicKey.first) {
+	const tuple<uint8_t *, size_t, bool> publicKey = uint8ArrayToBuffer(environment, argv[1]);
+	if(!get<2>(publicKey)) {
 	
 		// Return operation failed
 		return OPERATION_FAILED;
@@ -1529,7 +1529,7 @@ napi_value sharedSecretKeyFromSecretKeyAndPublicKey(napi_env environment, napi_c
 	
 	// Check if getting shared secret key from secret key and public key failed
 	uint8_t sharedSecretKey[secretKeySize(instanceData)];
-	if(!sharedSecretKeyFromSecretKeyAndPublicKey(instanceData, sharedSecretKey, secretKey.first, secretKey.second, publicKey.first, publicKey.second)) {
+	if(!sharedSecretKeyFromSecretKeyAndPublicKey(instanceData, sharedSecretKey, get<0>(secretKey), get<1>(secretKey), get<0>(publicKey), get<1>(publicKey))) {
 	
 		// Return operation failed
 		return OPERATION_FAILED;
@@ -1560,16 +1560,16 @@ napi_value pedersenCommit(napi_env environment, napi_callback_info arguments) {
 	}
 	
 	// Check if getting blind from arguments failed
-	const pair<const uint8_t *, size_t> blind = uint8ArrayToBuffer(environment, argv[0]);
-	if(!blind.first) {
+	const tuple<uint8_t *, size_t, bool> blind = uint8ArrayToBuffer(environment, argv[0]);
+	if(!get<2>(blind)) {
 	
 		// Return operation failed
 		return OPERATION_FAILED;
 	}
 	
 	// Check if getting value from arguments failed
-	const string value = stringToCString(environment, argv[1]);
-	if(value.empty()) {
+	const tuple<string, bool> value = stringToCString(environment, argv[1]);
+	if(!get<1>(value)) {
 	
 		// Return operation failed
 		return OPERATION_FAILED;
@@ -1577,7 +1577,7 @@ napi_value pedersenCommit(napi_env environment, napi_callback_info arguments) {
 	
 	// Check if performing Pedersen commit failed
 	uint8_t result[commitSize(instanceData)];
-	if(!pedersenCommit(instanceData, result, blind.first, blind.second, value.c_str())) {
+	if(!pedersenCommit(instanceData, result, get<0>(blind), get<1>(blind), get<0>(value).c_str())) {
 	
 		// Return operation failed
 		return OPERATION_FAILED;
@@ -1632,18 +1632,18 @@ napi_value pedersenCommitSum(napi_env environment, napi_callback_info arguments)
 		}
 		
 		// Check if getting commit as a buffer failed
-		const pair<const uint8_t *, size_t> commitBuffer = uint8ArrayToBuffer(environment, commit);
-		if(!commitBuffer.first) {
+		const tuple<uint8_t *, size_t, bool> commitBuffer = uint8ArrayToBuffer(environment, commit);
+		if(!get<2>(commitBuffer)) {
 		
 			// Return operation failed
 			return OPERATION_FAILED;
 		}
 		
 		// Append commit buffer to positive commits
-		positiveCommits.insert(positiveCommits.cend(), commitBuffer.first, commitBuffer.first + commitBuffer.second);
+		positiveCommits.insert(positiveCommits.cend(), get<0>(commitBuffer), get<0>(commitBuffer) + get<1>(commitBuffer));
 		
 		// Append commit's size to positive commits sizes
-		positiveCommitsSizes[i] = commitBuffer.second;
+		positiveCommitsSizes[i] = get<1>(commitBuffer);
 	}
 	
 	// Check if getting number of negative commits from arguments failed
@@ -1670,18 +1670,18 @@ napi_value pedersenCommitSum(napi_env environment, napi_callback_info arguments)
 		}
 		
 		// Check if getting commit as a buffer failed
-		const pair<const uint8_t *, size_t> commitBuffer = uint8ArrayToBuffer(environment, commit);
-		if(!commitBuffer.first) {
+		const tuple<uint8_t *, size_t, bool> commitBuffer = uint8ArrayToBuffer(environment, commit);
+		if(!get<2>(commitBuffer)) {
 		
 			// Return operation failed
 			return OPERATION_FAILED;
 		}
 		
 		// Append commit buffer to negative commits
-		negativeCommits.insert(negativeCommits.cend(), commitBuffer.first, commitBuffer.first + commitBuffer.second);
+		negativeCommits.insert(negativeCommits.cend(), get<0>(commitBuffer), get<0>(commitBuffer) + get<1>(commitBuffer));
 		
 		// Append commit's size to negative commits sizes
-		negativeCommitsSizes[i] = commitBuffer.second;
+		negativeCommitsSizes[i] = get<1>(commitBuffer);
 	}
 	
 	// Check if performing Pedersen commit sum failed
@@ -1717,8 +1717,8 @@ napi_value pedersenCommitToPublicKey(napi_env environment, napi_callback_info ar
 	}
 	
 	// Check if getting commit from arguments failed
-	const pair<const uint8_t *, size_t> commit = uint8ArrayToBuffer(environment, argv[0]);
-	if(!commit.first) {
+	const tuple<uint8_t *, size_t, bool> commit = uint8ArrayToBuffer(environment, argv[0]);
+	if(!get<2>(commit)) {
 	
 		// Return operation failed
 		return OPERATION_FAILED;
@@ -1726,7 +1726,7 @@ napi_value pedersenCommitToPublicKey(napi_env environment, napi_callback_info ar
 	
 	// Check if getting public key from Pedersen commit failed
 	uint8_t publicKey[publicKeySize(instanceData)];
-	if(!pedersenCommitToPublicKey(instanceData, publicKey, commit.first, commit.second)) {
+	if(!pedersenCommitToPublicKey(instanceData, publicKey, get<0>(commit), get<1>(commit))) {
 	
 		// Return operation failed
 		return OPERATION_FAILED;
@@ -1757,8 +1757,8 @@ napi_value publicKeyToPedersenCommit(napi_env environment, napi_callback_info ar
 	}
 	
 	// Check if getting public key from arguments failed
-	const pair<const uint8_t *, size_t> publicKey = uint8ArrayToBuffer(environment, argv[0]);
-	if(!publicKey.first) {
+	const tuple<uint8_t *, size_t, bool> publicKey = uint8ArrayToBuffer(environment, argv[0]);
+	if(!get<2>(publicKey)) {
 	
 		// Return operation failed
 		return OPERATION_FAILED;
@@ -1766,7 +1766,7 @@ napi_value publicKeyToPedersenCommit(napi_env environment, napi_callback_info ar
 	
 	// Check if getting Pedersen commit from public key failed
 	uint8_t commit[commitSize(instanceData)];
-	if(!publicKeyToPedersenCommit(instanceData, commit, publicKey.first, publicKey.second)) {
+	if(!publicKeyToPedersenCommit(instanceData, commit, get<0>(publicKey), get<1>(publicKey))) {
 	
 		// Return operation failed
 		return OPERATION_FAILED;
@@ -1797,48 +1797,48 @@ napi_value createSingleSignerSignature(napi_env environment, napi_callback_info 
 	}
 	
 	// Check if getting message from arguments failed
-	const pair<const uint8_t *, size_t> message = uint8ArrayToBuffer(environment, argv[0]);
-	if(!message.first) {
+	const tuple<uint8_t *, size_t, bool> message = uint8ArrayToBuffer(environment, argv[0]);
+	if(!get<2>(message)) {
 	
 		// Return operation failed
 		return OPERATION_FAILED;
 	}
 	
 	// Check if getting secret key from arguments failed
-	const pair<const uint8_t *, size_t> secretKey = uint8ArrayToBuffer(environment, argv[1]);
-	if(!secretKey.first) {
+	const tuple<uint8_t *, size_t, bool> secretKey = uint8ArrayToBuffer(environment, argv[1]);
+	if(!get<2>(secretKey)) {
 	
 		// Return operation failed
 		return OPERATION_FAILED;
 	}
 	
 	// Check if getting secret nonce from arguments failed
-	const pair<const uint8_t *, size_t> secretNonce = uint8ArrayToBuffer(environment, argv[2]);
-	if(!secretNonce.first && !isNull(environment, argv[2])) {
+	const tuple<uint8_t *, size_t, bool> secretNonce = uint8ArrayToBuffer(environment, argv[2]);
+	if(!get<2>(secretNonce) && !isNull(environment, argv[2], false)) {
 	
 		// Return operation failed
 		return OPERATION_FAILED;
 	}
 	
 	// Check if getting public key from arguments failed
-	const pair<const uint8_t *, size_t> publicKey = uint8ArrayToBuffer(environment, argv[3]);
-	if(!publicKey.first) {
+	const tuple<uint8_t *, size_t, bool> publicKey = uint8ArrayToBuffer(environment, argv[3]);
+	if(!get<2>(publicKey)) {
 	
 		// Return operation failed
 		return OPERATION_FAILED;
 	}
 	
 	// Check if getting public nonce from arguments failed
-	const pair<const uint8_t *, size_t> publicNonce = uint8ArrayToBuffer(environment, argv[4]);
-	if(!publicNonce.first && !isNull(environment, argv[4])) {
+	const tuple<uint8_t *, size_t, bool> publicNonce = uint8ArrayToBuffer(environment, argv[4]);
+	if(!get<2>(publicNonce) && !isNull(environment, argv[4], false)) {
 	
 		// Return operation failed
 		return OPERATION_FAILED;
 	}
 	
 	// Check if getting public nonce total from arguments failed
-	const pair<const uint8_t *, size_t> publicNonceTotal = uint8ArrayToBuffer(environment, argv[5]);
-	if(!publicNonceTotal.first && !isNull(environment, argv[5])) {
+	const tuple<uint8_t *, size_t, bool> publicNonceTotal = uint8ArrayToBuffer(environment, argv[5]);
+	if(!get<2>(publicNonceTotal) && !isNull(environment, argv[5], false)) {
 	
 		// Return operation failed
 		return OPERATION_FAILED;
@@ -1854,7 +1854,7 @@ napi_value createSingleSignerSignature(napi_env environment, napi_callback_info 
 	
 	// Check if creating signle-signer signature failed
 	uint8_t signature[singleSignerSignatureSize(instanceData)];
-	if(!createSingleSignerSignature(instanceData, signature, message.first, message.second, secretKey.first, secretKey.second, secretNonce.first, secretNonce.second, publicKey.first, publicKey.second, publicNonce.first, publicNonce.second, publicNonceTotal.first, publicNonceTotal.second, seed, sizeof(seed))) {
+	if(!createSingleSignerSignature(instanceData, signature, get<0>(message), get<1>(message), get<0>(secretKey), get<1>(secretKey), get<0>(secretNonce), get<1>(secretNonce), get<0>(publicKey), get<1>(publicKey), get<0>(publicNonce), get<1>(publicNonce), get<0>(publicNonceTotal), get<1>(publicNonceTotal), seed, sizeof(seed))) {
 	
 		// Clear seed
 		explicit_bzero(seed, sizeof(seed));
@@ -1915,23 +1915,23 @@ napi_value addSingleSignerSignatures(napi_env environment, napi_callback_info ar
 		}
 		
 		// Check if getting signature as a buffer failed
-		const pair<const uint8_t *, size_t> signatureBuffer = uint8ArrayToBuffer(environment, signature);
-		if(!signatureBuffer.first) {
+		const tuple<uint8_t *, size_t, bool> signatureBuffer = uint8ArrayToBuffer(environment, signature);
+		if(!get<2>(signatureBuffer)) {
 		
 			// Return operation failed
 			return OPERATION_FAILED;
 		}
 		
 		// Append signature buffer to signatures
-		signatures.insert(signatures.cend(), signatureBuffer.first, signatureBuffer.first + signatureBuffer.second);
+		signatures.insert(signatures.cend(), get<0>(signatureBuffer), get<0>(signatureBuffer) + get<1>(signatureBuffer));
 		
 		// Append signature's size to signatures sizes
-		signaturesSizes[i] = signatureBuffer.second;
+		signaturesSizes[i] = get<1>(signatureBuffer);
 	}
 	
 	// Check if getting public nonce total from arguments failed
-	const pair<const uint8_t *, size_t> publicNonceTotal = uint8ArrayToBuffer(environment, argv[1]);
-	if(!publicNonceTotal.first) {
+	const tuple<uint8_t *, size_t, bool> publicNonceTotal = uint8ArrayToBuffer(environment, argv[1]);
+	if(!get<2>(publicNonceTotal)) {
 	
 		// Return operation failed
 		return OPERATION_FAILED;
@@ -1939,7 +1939,7 @@ napi_value addSingleSignerSignatures(napi_env environment, napi_callback_info ar
 	
 	// Check if adding single-signer signatures failed
 	uint8_t result[singleSignerSignatureSize(instanceData)];
-	if(!addSingleSignerSignatures(instanceData, result, signatures.data(), signaturesSizes, numberOfSignatures, publicNonceTotal.first, publicNonceTotal.second)) {
+	if(!addSingleSignerSignatures(instanceData, result, signatures.data(), signaturesSizes, numberOfSignatures, get<0>(publicNonceTotal), get<1>(publicNonceTotal))) {
 	
 		// Return operation failed
 		return OPERATION_FAILED;
@@ -1970,40 +1970,40 @@ napi_value verifySingleSignerSignature(napi_env environment, napi_callback_info 
 	}
 	
 	// Check if getting signature from arguments failed
-	const pair<const uint8_t *, size_t> signature = uint8ArrayToBuffer(environment, argv[0]);
-	if(!signature.first) {
+	const tuple<uint8_t *, size_t, bool> signature = uint8ArrayToBuffer(environment, argv[0]);
+	if(!get<2>(signature)) {
 	
 		// Return false as a bool
 		return cBoolToBool(environment, false);
 	}
 	
 	// Check if getting message from arguments failed
-	const pair<const uint8_t *, size_t> message = uint8ArrayToBuffer(environment, argv[1]);
-	if(!message.first) {
+	const tuple<uint8_t *, size_t, bool> message = uint8ArrayToBuffer(environment, argv[1]);
+	if(!get<2>(message)) {
 	
 		// Return false as a bool
 		return cBoolToBool(environment, false);
 	}
 	
 	// Check if getting public nonce from arguments failed
-	const pair<const uint8_t *, size_t> publicNonce = uint8ArrayToBuffer(environment, argv[2]);
-	if(!publicNonce.first && !isNull(environment, argv[2])) {
+	const tuple<uint8_t *, size_t, bool> publicNonce = uint8ArrayToBuffer(environment, argv[2]);
+	if(!get<2>(publicNonce) && !isNull(environment, argv[2], false)) {
 	
 		// Return false as a bool
 		return cBoolToBool(environment, false);
 	}
 	
 	// Check if getting public key from arguments failed
-	const pair<const uint8_t *, size_t> publicKey = uint8ArrayToBuffer(environment, argv[3]);
-	if(!publicKey.first) {
+	const tuple<uint8_t *, size_t, bool> publicKey = uint8ArrayToBuffer(environment, argv[3]);
+	if(!get<2>(publicKey)) {
 	
 		// Return false as a bool
 		return cBoolToBool(environment, false);
 	}
 	
 	// Check if getting public key total from arguments failed
-	const pair<const uint8_t *, size_t> publicKeyTotal = uint8ArrayToBuffer(environment, argv[4]);
-	if(!publicKeyTotal.first) {
+	const tuple<uint8_t *, size_t, bool> publicKeyTotal = uint8ArrayToBuffer(environment, argv[4]);
+	if(!get<2>(publicKeyTotal)) {
 	
 		// Return false as a bool
 		return cBoolToBool(environment, false);
@@ -2018,7 +2018,7 @@ napi_value verifySingleSignerSignature(napi_env environment, napi_callback_info 
 	}
 	
 	// Check if signle-signer signature isn't verified
-	if(!verifySingleSignerSignature(instanceData, signature.first, signature.second, message.first, message.second, publicNonce.first, publicNonce.second, publicKey.first, publicKey.second, publicKeyTotal.first, publicKeyTotal.second, isPartial)) {
+	if(!verifySingleSignerSignature(instanceData, get<0>(signature), get<1>(signature), get<0>(message), get<1>(message), get<0>(publicNonce), get<1>(publicNonce), get<0>(publicKey), get<1>(publicKey), get<0>(publicKeyTotal), get<1>(publicKeyTotal), isPartial)) {
 	
 		// Return false as a bool
 		return cBoolToBool(environment, false);
@@ -2049,8 +2049,8 @@ napi_value singleSignerSignatureFromData(napi_env environment, napi_callback_inf
 	}
 	
 	// Check if getting data from arguments failed
-	const pair<const uint8_t *, size_t> data = uint8ArrayToBuffer(environment, argv[0]);
-	if(!data.first) {
+	const tuple<uint8_t *, size_t, bool> data = uint8ArrayToBuffer(environment, argv[0]);
+	if(!get<2>(data)) {
 	
 		// Return operation failed
 		return OPERATION_FAILED;
@@ -2058,7 +2058,7 @@ napi_value singleSignerSignatureFromData(napi_env environment, napi_callback_inf
 	
 	// Check if getting single-signer signature from data failed
 	uint8_t signature[singleSignerSignatureSize(instanceData)];
-	if(!singleSignerSignatureFromData(instanceData, signature, data.first, data.second)) {
+	if(!singleSignerSignatureFromData(instanceData, signature, get<0>(data), get<1>(data))) {
 	
 		// Return operation failed
 		return OPERATION_FAILED;
@@ -2089,8 +2089,8 @@ napi_value compactSingleSignerSignature(napi_env environment, napi_callback_info
 	}
 	
 	// Check if getting signature from arguments failed
-	const pair<const uint8_t *, size_t> signature = uint8ArrayToBuffer(environment, argv[0]);
-	if(!signature.first) {
+	const tuple<uint8_t *, size_t, bool> signature = uint8ArrayToBuffer(environment, argv[0]);
+	if(!get<2>(signature)) {
 	
 		// Return operation failed
 		return OPERATION_FAILED;
@@ -2098,7 +2098,7 @@ napi_value compactSingleSignerSignature(napi_env environment, napi_callback_info
 	
 	// Check if compacting single-signer signature failed
 	uint8_t result[singleSignerSignatureSize(instanceData)];
-	if(!compactSingleSignerSignature(instanceData, result, signature.first, signature.second)) {
+	if(!compactSingleSignerSignature(instanceData, result, get<0>(signature), get<1>(signature))) {
 	
 		// Return operation failed
 		return OPERATION_FAILED;
@@ -2129,8 +2129,8 @@ napi_value uncompactSingleSignerSignature(napi_env environment, napi_callback_in
 	}
 	
 	// Check if getting signature from arguments failed
-	const pair<const uint8_t *, size_t> signature = uint8ArrayToBuffer(environment, argv[0]);
-	if(!signature.first) {
+	const tuple<uint8_t *, size_t, bool> signature = uint8ArrayToBuffer(environment, argv[0]);
+	if(!get<2>(signature)) {
 	
 		// Return operation failed
 		return OPERATION_FAILED;
@@ -2138,7 +2138,7 @@ napi_value uncompactSingleSignerSignature(napi_env environment, napi_callback_in
 	
 	// Check if uncompacting single-signer signature failed
 	uint8_t result[uncompactSingleSignerSignatureSize(instanceData)];
-	if(!uncompactSingleSignerSignature(instanceData, result, signature.first, signature.second)) {
+	if(!uncompactSingleSignerSignature(instanceData, result, get<0>(signature), get<1>(signature))) {
 	
 		// Return operation failed
 		return OPERATION_FAILED;
@@ -2193,18 +2193,18 @@ napi_value combinePublicKeys(napi_env environment, napi_callback_info arguments)
 		}
 		
 		// Check if getting public key as a buffer failed
-		const pair<const uint8_t *, size_t> publicKeyBuffer = uint8ArrayToBuffer(environment, publicKey);
-		if(!publicKeyBuffer.first) {
+		const tuple<uint8_t *, size_t, bool> publicKeyBuffer = uint8ArrayToBuffer(environment, publicKey);
+		if(!get<2>(publicKeyBuffer)) {
 		
 			// Return operation failed
 			return OPERATION_FAILED;
 		}
 		
 		// Append public key buffer to public keys
-		publicKeys.insert(publicKeys.cend(), publicKeyBuffer.first, publicKeyBuffer.first + publicKeyBuffer.second);
+		publicKeys.insert(publicKeys.cend(), get<0>(publicKeyBuffer), get<0>(publicKeyBuffer) + get<1>(publicKeyBuffer));
 		
 		// Append public key's size to public keys sizes
-		publicKeysSizes[i] = publicKeyBuffer.second;
+		publicKeysSizes[i] = get<1>(publicKeyBuffer);
 	}
 	
 	// Check if combining public keys failed
@@ -2285,16 +2285,16 @@ napi_value createMessageHashSignature(napi_env environment, napi_callback_info a
 	}
 	
 	// Check if getting message hash from arguments failed
-	const pair<const uint8_t *, size_t> messageHash = uint8ArrayToBuffer(environment, argv[0]);
-	if(!messageHash.first) {
+	const tuple<uint8_t *, size_t, bool> messageHash = uint8ArrayToBuffer(environment, argv[0]);
+	if(!get<2>(messageHash)) {
 	
 		// Return operation failed
 		return OPERATION_FAILED;
 	}
 	
 	// Check if getting secret key from arguments failed
-	const pair<const uint8_t *, size_t> secretKey = uint8ArrayToBuffer(environment, argv[1]);
-	if(!secretKey.first) {
+	const tuple<uint8_t *, size_t, bool> secretKey = uint8ArrayToBuffer(environment, argv[1]);
+	if(!get<2>(secretKey)) {
 	
 		// Return operation failed
 		return OPERATION_FAILED;
@@ -2303,7 +2303,7 @@ napi_value createMessageHashSignature(napi_env environment, napi_callback_info a
 	// Check if creating message hash signature failed
 	uint8_t signature[maximumMessageHashSignatureSize(instanceData)];
 	char signatureSize[MAX_64_BIT_INTEGER_STRING_LENGTH];
-	if(!createMessageHashSignature(instanceData, signature, signatureSize, messageHash.first, messageHash.second, secretKey.first, secretKey.second)) {
+	if(!createMessageHashSignature(instanceData, signature, signatureSize, get<0>(messageHash), get<1>(messageHash), get<0>(secretKey), get<1>(secretKey))) {
 	
 		// Return operation failed
 		return OPERATION_FAILED;
@@ -2334,31 +2334,31 @@ napi_value verifyMessageHashSignature(napi_env environment, napi_callback_info a
 	}
 	
 	// Check if getting signature from arguments failed
-	const pair<const uint8_t *, size_t> signature = uint8ArrayToBuffer(environment, argv[0]);
-	if(!signature.first) {
+	const tuple<uint8_t *, size_t, bool> signature = uint8ArrayToBuffer(environment, argv[0]);
+	if(!get<2>(signature)) {
 	
 		// Return false as a bool
 		return cBoolToBool(environment, false);
 	}
 	
 	// Check if getting message hash from arguments failed
-	const pair<const uint8_t *, size_t> messageHash = uint8ArrayToBuffer(environment, argv[1]);
-	if(!messageHash.first) {
+	const tuple<uint8_t *, size_t, bool> messageHash = uint8ArrayToBuffer(environment, argv[1]);
+	if(!get<2>(messageHash)) {
 	
 		// Return false as a bool
 		return cBoolToBool(environment, false);
 	}
 	
 	// Check if getting public key from arguments failed
-	const pair<const uint8_t *, size_t> publicKey = uint8ArrayToBuffer(environment, argv[2]);
-	if(!publicKey.first) {
+	const tuple<uint8_t *, size_t, bool> publicKey = uint8ArrayToBuffer(environment, argv[2]);
+	if(!get<2>(publicKey)) {
 	
 		// Return false as a bool
 		return cBoolToBool(environment, false);
 	}
 	
 	// Check if message hash signature isn't verified
-	if(!verifyMessageHashSignature(instanceData, signature.first, signature.second, messageHash.first, messageHash.second, publicKey.first, publicKey.second)) {
+	if(!verifyMessageHashSignature(instanceData, get<0>(signature), get<1>(signature), get<0>(messageHash), get<1>(messageHash), get<0>(publicKey), get<1>(publicKey))) {
 	
 		// Return false as a bool
 		return cBoolToBool(environment, false);
@@ -2369,14 +2369,14 @@ napi_value verifyMessageHashSignature(napi_env environment, napi_callback_info a
 }
 
 // Uint8 array to buffer
-pair<const uint8_t *, size_t> uint8ArrayToBuffer(napi_env environment, napi_value uint8Array) {
+tuple<uint8_t *, size_t, bool> uint8ArrayToBuffer(napi_env environment, napi_value uint8Array) {
 
 	// Check if uint8 array isn't a typed array
 	bool isTypedArray;
 	if(napi_is_typedarray(environment, uint8Array, &isTypedArray) != napi_ok || !isTypedArray) {
 	
-		// Return nothing
-		return {nullptr, 0};
+		// Return failure
+		return {nullptr, 0, false};
 	}
 	
 	// Check if uint8 array isn't a uint8 array
@@ -2385,12 +2385,12 @@ pair<const uint8_t *, size_t> uint8ArrayToBuffer(napi_env environment, napi_valu
 	uint8_t *data;
 	if(napi_get_typedarray_info(environment, uint8Array, &type, &size, reinterpret_cast<void **>(&data), nullptr, nullptr) != napi_ok || type != napi_uint8_array) {
 	
-		// Return nothing
-		return {nullptr, 0};
+		// Return failure
+		return {nullptr, 0, false};
 	}
 	
 	// Return data and size
-	return {data, size};
+	return {data, size, true};
 }
 
 // Buffer to uint8 array
@@ -2492,26 +2492,26 @@ napi_value cBoolToBool(napi_env environment, bool value) {
 }
 
 // String to C string
-string stringToCString(napi_env environment, napi_value value) {
+tuple<string, bool> stringToCString(napi_env environment, napi_value value) {
 
 	// Check if getting the string's size failed
 	size_t size;
 	if(napi_get_value_string_utf8(environment, value, nullptr, 0, &size) != napi_ok) {
 	
-		// Return empty string
-		return "";
+		// Return failure
+		return {"", false};
 	}
 	
 	// Check if getting the string failed
 	char result[size + sizeof('\0')] = {};
 	if(napi_get_value_string_utf8(environment, value, result, sizeof(result), nullptr) != napi_ok) {
 	
-		// Return empty string
-		return "";
+		// Return failure
+		return {"", false};
 	}
 	
 	// Return result
-	return result;
+	return {result, true};
 }
 
 // Random fill
@@ -2563,9 +2563,16 @@ bool randomFill(napi_env environment, uint8_t *buffer, size_t size) {
 }
 
 // Is null
-bool isNull(napi_env environment, napi_value value) {
+bool isNull(napi_env environment, napi_value value, bool unknownResult) {
+
+	// Check if getting value's type failed
+	napi_valuetype type;
+	if(napi_typeof(environment, value, &type) != napi_ok) {
+	
+		// Return unknown result
+		return unknownResult;
+	}
 
 	// Return if value is null
-	napi_valuetype type;
-	return napi_typeof(environment, value, &type) != napi_ok || type == napi_null;
+	return type == napi_null;
 }
