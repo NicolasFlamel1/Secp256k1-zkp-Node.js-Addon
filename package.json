@@ -1,12 +1,15 @@
 {
 	"name": "@nicolasflamel/secp256k1-zkp-native",
-	"version": "0.0.10",
+	"version": "0.0.12",
 	"description": "Node.js addon for parts of libsecp256k1-zkp",
 	"main": "./main.js",
+	"files": [
+		"*",
+		"!.gitignore"
+	],
 	"gypfile": true,
 	"scripts": {
-		"preinstall": "wget -O \"./secp256k1-zkp.zip\" \"https://github.com/NicolasFlamel1/secp256k1-zkp/archive/master.zip\" && unzip \"./secp256k1-zkp.zip\" && wget -O \"./secp256k1-zkp-wrapper.zip\" \"https://github.com/NicolasFlamel1/Secp256k1-zkp-WASM-Wrapper/archive/refs/heads/master.zip\" && unzip \"./secp256k1-zkp-wrapper.zip\" && sed -i 's/^\\([^\\t\\n].* [a-zA-Z0-9]*(\\)\\(.*)\\)\\(;\\| {\\)/\\1InstanceData *instanceData, \\2\\3/g' \"./Secp256k1-zkp-WASM-Wrapper-master/main.cpp\" && sed -i 's/, )/)/g' \"./Secp256k1-zkp-WASM-Wrapper-master/main.cpp\" && sed -i 's/\\(context\\|scratchSpace\\|generators\\),/instanceData->\\1,/g' \"./Secp256k1-zkp-WASM-Wrapper-master/main.cpp\" && sed -i 's/\\(isValidSecretKey(\\|isZeroArray(\\)\\([^I]\\)/\\1instanceData, \\2/g' \"./Secp256k1-zkp-WASM-Wrapper-master/main.cpp\"",
-		"install": "node-gyp rebuild"
+		"prepublishOnly": "wget \"https://github.com/NicolasFlamel1/secp256k1-zkp/archive/master.zip\" && unzip \"./master.zip\" && rm \"./master.zip\" && find \"./secp256k1-zkp-master/\" -mindepth 1 -maxdepth 1 ! -name \"src\" ! -name \"include\" -exec rm -rf {} + && rm -rf \"./secp256k1-zkp-master/src/asm/\" && rm -rf \"./secp256k1-zkp-master/src/java/\" && wget \"https://github.com/NicolasFlamel1/Secp256k1-zkp-WASM-Wrapper/archive/refs/heads/master.zip\" && unzip \"./master.zip\" && rm \"./master.zip\" && sed -i 's/^\\([^\\t\\n].* [a-zA-Z0-9]*(\\)\\(.*)\\)\\(;\\| {\\)/\\1InstanceData *instanceData, \\2\\3/g' \"./Secp256k1-zkp-WASM-Wrapper-master/main.cpp\" && sed -i 's/, )/)/g' \"./Secp256k1-zkp-WASM-Wrapper-master/main.cpp\" && sed -i 's/\\(context\\|scratchSpace\\|generators\\),/instanceData->\\1,/g' \"./Secp256k1-zkp-WASM-Wrapper-master/main.cpp\" && sed -i 's/\\(isValidSecretKey(\\|isZeroArray(\\)\\([^I]\\)/\\1instanceData, \\2/g' \"./Secp256k1-zkp-WASM-Wrapper-master/main.cpp\" && find \"./Secp256k1-zkp-WASM-Wrapper-master/\" -mindepth 1 ! -name \"main.cpp\" -exec rm -rf {} +"
 	},
 	"repository": {
 		"type": "git",
