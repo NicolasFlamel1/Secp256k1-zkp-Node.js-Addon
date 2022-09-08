@@ -1,3 +1,5 @@
+// Use strict
 "use strict";
 
-module["exports"] = require("./build/Release/secp256k1_zkp.node");
+// Exports
+module["exports"] = require("bindings")("secp256k1_zkp.node");

@@ -1,6 +1,6 @@
 {
 	"name": "@nicolasflamel/secp256k1-zkp-native",
-	"version": "0.0.14",
+	"version": "0.0.15",
 	"description": "Node.js addon for parts of libsecp256k1-zkp",
 	"main": "./main.js",
 	"files": [
@@ -25,5 +25,8 @@
 	"license": "MIT",
 	"bugs": {
 		"url": "https://github.com/NicolasFlamel1/Secp256k1-zkp-Node.js-Addon/issues"
+	},
+	"dependencies": {
+		"bindings": "^1.5.0"
 	}
 }
