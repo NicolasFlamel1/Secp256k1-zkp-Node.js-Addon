@@ -2,6 +2,7 @@
 #include <cstring>
 #include <new>
 #include <node_api.h>
+#include <string>
 #include <tuple>
 #include <vector>
 
@@ -28,8 +29,12 @@ struct InstanceData {
 };
 
 
-// Header files
-#include "./Secp256k1-zkp-WASM-Wrapper-master/main.cpp"
+// Secp256k1-zkp namespace
+namespace Secp256k1Zkp {
+
+	// Header files
+	#include "./Secp256k1-zkp-WASM-Wrapper-master/main.cpp"
+}
 
 
 // Constants
@@ -509,7 +514,7 @@ InstanceData *getInstanceData(napi_env environment) {
 	if(!instanceData->scratchSpace) {
 	
 		// Check if creating instance data's scratch space failed
-		instanceData->scratchSpace = secp256k1_scratch_space_create(instanceData->context, SCRATCH_SPACE_SIZE);
+		instanceData->scratchSpace = secp256k1_scratch_space_create(instanceData->context, Secp256k1Zkp::SCRATCH_SPACE_SIZE);
 		if(!instanceData->scratchSpace) {
 		
 			// Return nothing
@@ -521,7 +526,7 @@ InstanceData *getInstanceData(napi_env environment) {
 	if(!instanceData->generators) {
 	
 		// Check if creating instance data's generators failed
-		instanceData->generators = secp256k1_bulletproof_generators_create(instanceData->context, &secp256k1_generator_const_g, NUMBER_OF_GENERATORS);
+		instanceData->generators = secp256k1_bulletproof_generators_create(instanceData->context, &secp256k1_generator_const_g, Secp256k1Zkp::NUMBER_OF_GENERATORS);
 		if(!instanceData->generators) {
 		
 			// Return nothing
@@ -570,8 +575,8 @@ napi_value blindSwitch(napi_env environment, napi_callback_info arguments) {
 	}
 	
 	// Check if performing blind switch failed
-	uint8_t result[blindSize(instanceData)];
-	if(!blindSwitch(instanceData, result, get<0>(blind), get<1>(blind), get<0>(value).c_str())) {
+	uint8_t result[Secp256k1Zkp::blindSize(instanceData)];
+	if(!Secp256k1Zkp::blindSwitch(instanceData, result, get<0>(blind), get<1>(blind), get<0>(value).c_str())) {
 	
 		// Return operation failed
 		return OPERATION_FAILED;
@@ -687,8 +692,8 @@ napi_value blindSum(napi_env environment, napi_callback_info arguments) {
 	}
 	
 	// Check if performing blind sum failed
-	uint8_t result[blindSize(instanceData)];
-	if(!blindSum(instanceData, result, blinds.data(), blindsSizes, numberOfPositiveBlinds + numberOfNegativeBlinds, numberOfPositiveBlinds)) {
+	uint8_t result[Secp256k1Zkp::blindSize(instanceData)];
+	if(!Secp256k1Zkp::blindSum(instanceData, result, blinds.data(), blindsSizes, numberOfPositiveBlinds + numberOfNegativeBlinds, numberOfPositiveBlinds)) {
 	
 		// Clear blinds
 		explicit_bzero(blinds.data(), blinds.size());
@@ -733,7 +738,7 @@ napi_value isValidSecretKey(napi_env environment, napi_callback_info arguments) 
 	}
 	
 	// Check if secret key is not a valid secret key
-	if(!isValidSecretKey(instanceData, get<0>(secretKey), get<1>(secretKey))) {
+	if(!Secp256k1Zkp::isValidSecretKey(instanceData, get<0>(secretKey), get<1>(secretKey))) {
 	
 		// Return false as a bool
 		return cBoolToBool(environment, false);
@@ -772,7 +777,7 @@ napi_value isValidPublicKey(napi_env environment, napi_callback_info arguments) 
 	}
 	
 	// Check if public key is not a valid public key
-	if(!isValidPublicKey(instanceData, get<0>(publicKey), get<1>(publicKey))) {
+	if(!Secp256k1Zkp::isValidPublicKey(instanceData, get<0>(publicKey), get<1>(publicKey))) {
 	
 		// Return false as a bool
 		return cBoolToBool(environment, false);
@@ -811,7 +816,7 @@ napi_value isValidCommit(napi_env environment, napi_callback_info arguments) {
 	}
 	
 	// Check if commit is not a valid commit
-	if(!isValidCommit(instanceData, get<0>(commit), get<1>(commit))) {
+	if(!Secp256k1Zkp::isValidCommit(instanceData, get<0>(commit), get<1>(commit))) {
 	
 		// Return false as a bool
 		return cBoolToBool(environment, false);
@@ -850,7 +855,7 @@ napi_value isValidSingleSignerSignature(napi_env environment, napi_callback_info
 	}
 	
 	// Check if signature is not a valid single-signer signature
-	if(!isValidSingleSignerSignature(instanceData, get<0>(signature), get<1>(signature))) {
+	if(!Secp256k1Zkp::isValidSingleSignerSignature(instanceData, get<0>(signature), get<1>(signature))) {
 	
 		// Return false as a bool
 		return cBoolToBool(environment, false);
@@ -929,9 +934,9 @@ napi_value createBulletproof(napi_env environment, napi_callback_info arguments)
 	}
 	
 	// Check if creating bulletproof failed
-	uint8_t proof[bulletproofProofSize(instanceData)];
+	uint8_t proof[Secp256k1Zkp::bulletproofProofSize(instanceData)];
 	char proofSize[MAX_64_BIT_INTEGER_STRING_LENGTH];
-	if(!createBulletproof(instanceData, proof, proofSize, get<0>(blind), get<1>(blind), get<0>(value).c_str(), get<0>(nonce), get<1>(nonce), get<0>(privateNonce), get<1>(privateNonce), get<0>(extraCommit), get<1>(extraCommit), get<0>(message), get<1>(message))) {
+	if(!Secp256k1Zkp::createBulletproof(instanceData, proof, proofSize, get<0>(blind), get<1>(blind), get<0>(value).c_str(), get<0>(nonce), get<1>(nonce), get<0>(privateNonce), get<1>(privateNonce), get<0>(extraCommit), get<1>(extraCommit), get<0>(message), get<1>(message))) {
 	
 		// Return operation failed
 		return OPERATION_FAILED;
@@ -1026,9 +1031,9 @@ napi_value createBulletproofBlindless(napi_env environment, napi_callback_info a
 	}
 	
 	// Check if creating bulletproof blindless failed
-	uint8_t proof[bulletproofProofSize(instanceData)];
+	uint8_t proof[Secp256k1Zkp::bulletproofProofSize(instanceData)];
 	char proofSize[MAX_64_BIT_INTEGER_STRING_LENGTH];
-	if(!createBulletproofBlindless(instanceData, proof, proofSize, get<0>(tauX), get<1>(tauX), get<0>(tOne), get<1>(tOne), get<0>(tTwo), get<1>(tTwo), get<0>(commit), get<1>(commit), get<0>(value).c_str(), get<0>(nonce), get<1>(nonce), get<0>(extraCommit), get<1>(extraCommit), get<0>(message), get<1>(message))) {
+	if(!Secp256k1Zkp::createBulletproofBlindless(instanceData, proof, proofSize, get<0>(tauX), get<1>(tauX), get<0>(tOne), get<1>(tOne), get<0>(tTwo), get<1>(tTwo), get<0>(commit), get<1>(commit), get<0>(value).c_str(), get<0>(nonce), get<1>(nonce), get<0>(extraCommit), get<1>(extraCommit), get<0>(message), get<1>(message))) {
 	
 		// Return operation failed
 		return OPERATION_FAILED;
@@ -1084,9 +1089,9 @@ napi_value rewindBulletproof(napi_env environment, napi_callback_info arguments)
 	
 	// Check if performing rewind bulletproof failed
 	char value[MAX_64_BIT_INTEGER_STRING_LENGTH];
-	uint8_t blind[blindSize(instanceData)];
-	uint8_t message[bulletproofMessageSize(instanceData)];
-	if(!rewindBulletproof(instanceData, value, blind, message, get<0>(proof), get<1>(proof), get<0>(commit), get<1>(commit), get<0>(nonce), get<1>(nonce))) {
+	uint8_t blind[Secp256k1Zkp::blindSize(instanceData)];
+	uint8_t message[Secp256k1Zkp::bulletproofMessageSize(instanceData)];
+	if(!Secp256k1Zkp::rewindBulletproof(instanceData, value, blind, message, get<0>(proof), get<1>(proof), get<0>(commit), get<1>(commit), get<0>(nonce), get<1>(nonce))) {
 	
 		// Return operation failed
 		return OPERATION_FAILED;
@@ -1173,7 +1178,7 @@ napi_value verifyBulletproof(napi_env environment, napi_callback_info arguments)
 	}
 	
 	// Check if bulletproof isn't verified
-	if(!verifyBulletproof(instanceData, get<0>(proof), get<1>(proof), get<0>(commit), get<1>(commit), get<0>(extraCommit), get<1>(extraCommit))) {
+	if(!Secp256k1Zkp::verifyBulletproof(instanceData, get<0>(proof), get<1>(proof), get<0>(commit), get<1>(commit), get<0>(extraCommit), get<1>(extraCommit))) {
 	
 		// Return false as a bool
 		return cBoolToBool(environment, false);
@@ -1212,8 +1217,8 @@ napi_value publicKeyFromSecretKey(napi_env environment, napi_callback_info argum
 	}
 	
 	// Check if getting public key from secret key failed
-	uint8_t publicKey[publicKeySize(instanceData)];
-	if(!publicKeyFromSecretKey(instanceData, publicKey, get<0>(secretKey), get<1>(secretKey))) {
+	uint8_t publicKey[Secp256k1Zkp::publicKeySize(instanceData)];
+	if(!Secp256k1Zkp::publicKeyFromSecretKey(instanceData, publicKey, get<0>(secretKey), get<1>(secretKey))) {
 	
 		// Return operation failed
 		return OPERATION_FAILED;
@@ -1252,8 +1257,8 @@ napi_value publicKeyFromData(napi_env environment, napi_callback_info arguments)
 	}
 	
 	// Check if getting public key from data failed
-	uint8_t publicKey[publicKeySize(instanceData)];
-	if(!publicKeyFromData(instanceData, publicKey, get<0>(data), get<1>(data))) {
+	uint8_t publicKey[Secp256k1Zkp::publicKeySize(instanceData)];
+	if(!Secp256k1Zkp::publicKeyFromData(instanceData, publicKey, get<0>(data), get<1>(data))) {
 	
 		// Return operation failed
 		return OPERATION_FAILED;
@@ -1292,8 +1297,8 @@ napi_value uncompressPublicKey(napi_env environment, napi_callback_info argument
 	}
 	
 	// Check if uncompressing the public key failed
-	uint8_t uncompressedPublicKey[uncompressedPublicKeySize(instanceData)];
-	if(!uncompressPublicKey(instanceData, uncompressedPublicKey, get<0>(publicKey), get<1>(publicKey))) {
+	uint8_t uncompressedPublicKey[Secp256k1Zkp::uncompressedPublicKeySize(instanceData)];
+	if(!Secp256k1Zkp::uncompressPublicKey(instanceData, uncompressedPublicKey, get<0>(publicKey), get<1>(publicKey))) {
 	
 		// Return operation failed
 		return OPERATION_FAILED;
@@ -1340,7 +1345,7 @@ napi_value secretKeyTweakAdd(napi_env environment, napi_callback_info arguments)
 	}
 	
 	// Check if performing secret key tweak add failed
-	if(!secretKeyTweakAdd(instanceData, get<0>(secretKey), get<1>(secretKey), get<0>(tweak), get<1>(tweak))) {
+	if(!Secp256k1Zkp::secretKeyTweakAdd(instanceData, get<0>(secretKey), get<1>(secretKey), get<0>(tweak), get<1>(tweak))) {
 	
 		// Return operation failed
 		return OPERATION_FAILED;
@@ -1387,7 +1392,7 @@ napi_value publicKeyTweakAdd(napi_env environment, napi_callback_info arguments)
 	}
 	
 	// Check if performing public key tweak add failed
-	if(!publicKeyTweakAdd(instanceData, get<0>(publicKey), get<1>(publicKey), get<0>(tweak), get<1>(tweak))) {
+	if(!Secp256k1Zkp::publicKeyTweakAdd(instanceData, get<0>(publicKey), get<1>(publicKey), get<0>(tweak), get<1>(tweak))) {
 	
 		// Return operation failed
 		return OPERATION_FAILED;
@@ -1434,7 +1439,7 @@ napi_value secretKeyTweakMultiply(napi_env environment, napi_callback_info argum
 	}
 	
 	// Check if performing secret key tweak multiply failed
-	if(!secretKeyTweakMultiply(instanceData, get<0>(secretKey), get<1>(secretKey), get<0>(tweak), get<1>(tweak))) {
+	if(!Secp256k1Zkp::secretKeyTweakMultiply(instanceData, get<0>(secretKey), get<1>(secretKey), get<0>(tweak), get<1>(tweak))) {
 	
 		// Return operation failed
 		return OPERATION_FAILED;
@@ -1481,7 +1486,7 @@ napi_value publicKeyTweakMultiply(napi_env environment, napi_callback_info argum
 	}
 	
 	// Check if performing public key tweak multiply failed
-	if(!publicKeyTweakMultiply(instanceData, get<0>(publicKey), get<1>(publicKey), get<0>(tweak), get<1>(tweak))) {
+	if(!Secp256k1Zkp::publicKeyTweakMultiply(instanceData, get<0>(publicKey), get<1>(publicKey), get<0>(tweak), get<1>(tweak))) {
 	
 		// Return operation failed
 		return OPERATION_FAILED;
@@ -1528,8 +1533,8 @@ napi_value sharedSecretKeyFromSecretKeyAndPublicKey(napi_env environment, napi_c
 	}
 	
 	// Check if getting shared secret key from secret key and public key failed
-	uint8_t sharedSecretKey[secretKeySize(instanceData)];
-	if(!sharedSecretKeyFromSecretKeyAndPublicKey(instanceData, sharedSecretKey, get<0>(secretKey), get<1>(secretKey), get<0>(publicKey), get<1>(publicKey))) {
+	uint8_t sharedSecretKey[Secp256k1Zkp::secretKeySize(instanceData)];
+	if(!Secp256k1Zkp::sharedSecretKeyFromSecretKeyAndPublicKey(instanceData, sharedSecretKey, get<0>(secretKey), get<1>(secretKey), get<0>(publicKey), get<1>(publicKey))) {
 	
 		// Return operation failed
 		return OPERATION_FAILED;
@@ -1576,8 +1581,8 @@ napi_value pedersenCommit(napi_env environment, napi_callback_info arguments) {
 	}
 	
 	// Check if performing Pedersen commit failed
-	uint8_t result[commitSize(instanceData)];
-	if(!pedersenCommit(instanceData, result, get<0>(blind), get<1>(blind), get<0>(value).c_str())) {
+	uint8_t result[Secp256k1Zkp::commitSize(instanceData)];
+	if(!Secp256k1Zkp::pedersenCommit(instanceData, result, get<0>(blind), get<1>(blind), get<0>(value).c_str())) {
 	
 		// Return operation failed
 		return OPERATION_FAILED;
@@ -1685,8 +1690,8 @@ napi_value pedersenCommitSum(napi_env environment, napi_callback_info arguments)
 	}
 	
 	// Check if performing Pedersen commit sum failed
-	uint8_t result[commitSize(instanceData)];
-	if(!pedersenCommitSum(instanceData, result, positiveCommits.data(), positiveCommitsSizes, numberOfPositiveCommits, negativeCommits.data(), negativeCommitsSizes, numberOfNegativeCommits)) {
+	uint8_t result[Secp256k1Zkp::commitSize(instanceData)];
+	if(!Secp256k1Zkp::pedersenCommitSum(instanceData, result, positiveCommits.data(), positiveCommitsSizes, numberOfPositiveCommits, negativeCommits.data(), negativeCommitsSizes, numberOfNegativeCommits)) {
 	
 		// Return operation failed
 		return OPERATION_FAILED;
@@ -1725,8 +1730,8 @@ napi_value pedersenCommitToPublicKey(napi_env environment, napi_callback_info ar
 	}
 	
 	// Check if getting public key from Pedersen commit failed
-	uint8_t publicKey[publicKeySize(instanceData)];
-	if(!pedersenCommitToPublicKey(instanceData, publicKey, get<0>(commit), get<1>(commit))) {
+	uint8_t publicKey[Secp256k1Zkp::publicKeySize(instanceData)];
+	if(!Secp256k1Zkp::pedersenCommitToPublicKey(instanceData, publicKey, get<0>(commit), get<1>(commit))) {
 	
 		// Return operation failed
 		return OPERATION_FAILED;
@@ -1765,8 +1770,8 @@ napi_value publicKeyToPedersenCommit(napi_env environment, napi_callback_info ar
 	}
 	
 	// Check if getting Pedersen commit from public key failed
-	uint8_t commit[commitSize(instanceData)];
-	if(!publicKeyToPedersenCommit(instanceData, commit, get<0>(publicKey), get<1>(publicKey))) {
+	uint8_t commit[Secp256k1Zkp::commitSize(instanceData)];
+	if(!Secp256k1Zkp::publicKeyToPedersenCommit(instanceData, commit, get<0>(publicKey), get<1>(publicKey))) {
 	
 		// Return operation failed
 		return OPERATION_FAILED;
@@ -1845,7 +1850,7 @@ napi_value createSingleSignerSignature(napi_env environment, napi_callback_info 
 	}
 	
 	// Check if creating random seed failed
-	uint8_t seed[seedSize(instanceData)];
+	uint8_t seed[Secp256k1Zkp::seedSize(instanceData)];
 	if(!randomFill(environment, seed, sizeof(seed))) {
 	
 		// Return operation failed
@@ -1853,8 +1858,8 @@ napi_value createSingleSignerSignature(napi_env environment, napi_callback_info 
 	}
 	
 	// Check if creating signle-signer signature failed
-	uint8_t signature[singleSignerSignatureSize(instanceData)];
-	if(!createSingleSignerSignature(instanceData, signature, get<0>(message), get<1>(message), get<0>(secretKey), get<1>(secretKey), get<0>(secretNonce), get<1>(secretNonce), get<0>(publicKey), get<1>(publicKey), get<0>(publicNonce), get<1>(publicNonce), get<0>(publicNonceTotal), get<1>(publicNonceTotal), seed, sizeof(seed))) {
+	uint8_t signature[Secp256k1Zkp::singleSignerSignatureSize(instanceData)];
+	if(!Secp256k1Zkp::createSingleSignerSignature(instanceData, signature, get<0>(message), get<1>(message), get<0>(secretKey), get<1>(secretKey), get<0>(secretNonce), get<1>(secretNonce), get<0>(publicKey), get<1>(publicKey), get<0>(publicNonce), get<1>(publicNonce), get<0>(publicNonceTotal), get<1>(publicNonceTotal), seed, sizeof(seed))) {
 	
 		// Clear seed
 		explicit_bzero(seed, sizeof(seed));
@@ -1938,8 +1943,8 @@ napi_value addSingleSignerSignatures(napi_env environment, napi_callback_info ar
 	}
 	
 	// Check if adding single-signer signatures failed
-	uint8_t result[singleSignerSignatureSize(instanceData)];
-	if(!addSingleSignerSignatures(instanceData, result, signatures.data(), signaturesSizes, numberOfSignatures, get<0>(publicNonceTotal), get<1>(publicNonceTotal))) {
+	uint8_t result[Secp256k1Zkp::singleSignerSignatureSize(instanceData)];
+	if(!Secp256k1Zkp::addSingleSignerSignatures(instanceData, result, signatures.data(), signaturesSizes, numberOfSignatures, get<0>(publicNonceTotal), get<1>(publicNonceTotal))) {
 	
 		// Return operation failed
 		return OPERATION_FAILED;
@@ -2018,7 +2023,7 @@ napi_value verifySingleSignerSignature(napi_env environment, napi_callback_info 
 	}
 	
 	// Check if signle-signer signature isn't verified
-	if(!verifySingleSignerSignature(instanceData, get<0>(signature), get<1>(signature), get<0>(message), get<1>(message), get<0>(publicNonce), get<1>(publicNonce), get<0>(publicKey), get<1>(publicKey), get<0>(publicKeyTotal), get<1>(publicKeyTotal), isPartial)) {
+	if(!Secp256k1Zkp::verifySingleSignerSignature(instanceData, get<0>(signature), get<1>(signature), get<0>(message), get<1>(message), get<0>(publicNonce), get<1>(publicNonce), get<0>(publicKey), get<1>(publicKey), get<0>(publicKeyTotal), get<1>(publicKeyTotal), isPartial)) {
 	
 		// Return false as a bool
 		return cBoolToBool(environment, false);
@@ -2057,8 +2062,8 @@ napi_value singleSignerSignatureFromData(napi_env environment, napi_callback_inf
 	}
 	
 	// Check if getting single-signer signature from data failed
-	uint8_t signature[singleSignerSignatureSize(instanceData)];
-	if(!singleSignerSignatureFromData(instanceData, signature, get<0>(data), get<1>(data))) {
+	uint8_t signature[Secp256k1Zkp::singleSignerSignatureSize(instanceData)];
+	if(!Secp256k1Zkp::singleSignerSignatureFromData(instanceData, signature, get<0>(data), get<1>(data))) {
 	
 		// Return operation failed
 		return OPERATION_FAILED;
@@ -2097,8 +2102,8 @@ napi_value compactSingleSignerSignature(napi_env environment, napi_callback_info
 	}
 	
 	// Check if compacting single-signer signature failed
-	uint8_t result[singleSignerSignatureSize(instanceData)];
-	if(!compactSingleSignerSignature(instanceData, result, get<0>(signature), get<1>(signature))) {
+	uint8_t result[Secp256k1Zkp::singleSignerSignatureSize(instanceData)];
+	if(!Secp256k1Zkp::compactSingleSignerSignature(instanceData, result, get<0>(signature), get<1>(signature))) {
 	
 		// Return operation failed
 		return OPERATION_FAILED;
@@ -2137,8 +2142,8 @@ napi_value uncompactSingleSignerSignature(napi_env environment, napi_callback_in
 	}
 	
 	// Check if uncompacting single-signer signature failed
-	uint8_t result[uncompactSingleSignerSignatureSize(instanceData)];
-	if(!uncompactSingleSignerSignature(instanceData, result, get<0>(signature), get<1>(signature))) {
+	uint8_t result[Secp256k1Zkp::uncompactSingleSignerSignatureSize(instanceData)];
+	if(!Secp256k1Zkp::uncompactSingleSignerSignature(instanceData, result, get<0>(signature), get<1>(signature))) {
 	
 		// Return operation failed
 		return OPERATION_FAILED;
@@ -2208,8 +2213,8 @@ napi_value combinePublicKeys(napi_env environment, napi_callback_info arguments)
 	}
 	
 	// Check if combining public keys failed
-	uint8_t result[publicKeySize(instanceData)];
-	if(!combinePublicKeys(instanceData, result, publicKeys.data(), publicKeysSizes, numberOfPublicKeys)) {
+	uint8_t result[Secp256k1Zkp::publicKeySize(instanceData)];
+	if(!Secp256k1Zkp::combinePublicKeys(instanceData, result, publicKeys.data(), publicKeysSizes, numberOfPublicKeys)) {
 	
 		// Return operation failed
 		return OPERATION_FAILED;
@@ -2239,7 +2244,7 @@ napi_value createSecretNonce(napi_env environment, napi_callback_info arguments)
 	}
 	
 	// Check if creating random seed failed
-	uint8_t seed[seedSize(instanceData)];
+	uint8_t seed[Secp256k1Zkp::seedSize(instanceData)];
 	if(!randomFill(environment, seed, sizeof(seed))) {
 	
 		// Return operation failed
@@ -2247,8 +2252,8 @@ napi_value createSecretNonce(napi_env environment, napi_callback_info arguments)
 	}
 	
 	// Check if creating secure nonce failed
-	uint8_t nonce[nonceSize(instanceData)];
-	if(!createSecretNonce(instanceData, nonce, seed, sizeof(seed))) {
+	uint8_t nonce[Secp256k1Zkp::nonceSize(instanceData)];
+	if(!Secp256k1Zkp::createSecretNonce(instanceData, nonce, seed, sizeof(seed))) {
 	
 		// Clear seed
 		explicit_bzero(seed, sizeof(seed));
@@ -2301,9 +2306,9 @@ napi_value createMessageHashSignature(napi_env environment, napi_callback_info a
 	}
 	
 	// Check if creating message hash signature failed
-	uint8_t signature[maximumMessageHashSignatureSize(instanceData)];
+	uint8_t signature[Secp256k1Zkp::maximumMessageHashSignatureSize(instanceData)];
 	char signatureSize[MAX_64_BIT_INTEGER_STRING_LENGTH];
-	if(!createMessageHashSignature(instanceData, signature, signatureSize, get<0>(messageHash), get<1>(messageHash), get<0>(secretKey), get<1>(secretKey))) {
+	if(!Secp256k1Zkp::createMessageHashSignature(instanceData, signature, signatureSize, get<0>(messageHash), get<1>(messageHash), get<0>(secretKey), get<1>(secretKey))) {
 	
 		// Return operation failed
 		return OPERATION_FAILED;
@@ -2358,7 +2363,7 @@ napi_value verifyMessageHashSignature(napi_env environment, napi_callback_info a
 	}
 	
 	// Check if message hash signature isn't verified
-	if(!verifyMessageHashSignature(instanceData, get<0>(signature), get<1>(signature), get<0>(messageHash), get<1>(messageHash), get<0>(publicKey), get<1>(publicKey))) {
+	if(!Secp256k1Zkp::verifyMessageHashSignature(instanceData, get<0>(signature), get<1>(signature), get<0>(messageHash), get<1>(messageHash), get<0>(publicKey), get<1>(publicKey))) {
 	
 		// Return false as a bool
 		return cBoolToBool(environment, false);
