@@ -33,7 +33,7 @@ struct InstanceData {
 namespace Secp256k1Zkp {
 
 	// Header files
-	#include "./Secp256k1-zkp-WASM-Wrapper-master/main.cpp"
+	#include "./Secp256k1-zkp-NPM-Package-master/main.cpp"
 }
 
 
@@ -635,7 +635,7 @@ napi_value blindSum(napi_env environment, napi_callback_info arguments) {
 		if(napi_get_element(environment, argv[0], i, &blind) != napi_ok) {
 		
 			// Clear blinds
-			explicit_bzero(blinds.data(), blinds.size());
+			memset(blinds.data(), 0, blinds.size());
 		
 			// Return operation failed
 			return OPERATION_FAILED;
@@ -646,7 +646,7 @@ napi_value blindSum(napi_env environment, napi_callback_info arguments) {
 		if(!get<2>(blindBuffer)) {
 		
 			// Clear blinds
-			explicit_bzero(blinds.data(), blinds.size());
+			memset(blinds.data(), 0, blinds.size());
 		
 			// Return operation failed
 			return OPERATION_FAILED;
@@ -667,7 +667,7 @@ napi_value blindSum(napi_env environment, napi_callback_info arguments) {
 		if(napi_get_element(environment, argv[1], i, &blind) != napi_ok) {
 		
 			// Clear blinds
-			explicit_bzero(blinds.data(), blinds.size());
+			memset(blinds.data(), 0, blinds.size());
 		
 			// Return operation failed
 			return OPERATION_FAILED;
@@ -678,7 +678,7 @@ napi_value blindSum(napi_env environment, napi_callback_info arguments) {
 		if(!get<2>(blindBuffer)) {
 		
 			// Clear blinds
-			explicit_bzero(blinds.data(), blinds.size());
+			memset(blinds.data(), 0, blinds.size());
 		
 			// Return operation failed
 			return OPERATION_FAILED;
@@ -696,14 +696,14 @@ napi_value blindSum(napi_env environment, napi_callback_info arguments) {
 	if(!Secp256k1Zkp::blindSum(instanceData, result, blinds.data(), blindsSizes, numberOfPositiveBlinds + numberOfNegativeBlinds, numberOfPositiveBlinds)) {
 	
 		// Clear blinds
-		explicit_bzero(blinds.data(), blinds.size());
+		memset(blinds.data(), 0, blinds.size());
 	
 		// Return operation failed
 		return OPERATION_FAILED;
 	}
 	
 	// Clear blinds
-	explicit_bzero(blinds.data(), blinds.size());
+	memset(blinds.data(), 0, blinds.size());
 	
 	// Return result as a uint8 array
 	return bufferToUint8Array(environment, result, sizeof(result));
@@ -1862,14 +1862,14 @@ napi_value createSingleSignerSignature(napi_env environment, napi_callback_info 
 	if(!Secp256k1Zkp::createSingleSignerSignature(instanceData, signature, get<0>(message), get<1>(message), get<0>(secretKey), get<1>(secretKey), get<0>(secretNonce), get<1>(secretNonce), get<0>(publicKey), get<1>(publicKey), get<0>(publicNonce), get<1>(publicNonce), get<0>(publicNonceTotal), get<1>(publicNonceTotal), seed, sizeof(seed))) {
 	
 		// Clear seed
-		explicit_bzero(seed, sizeof(seed));
+		memset(seed, 0, sizeof(seed));
 		
 		// Return operation failed
 		return OPERATION_FAILED;
 	}
 	
 	// Clear seed
-	explicit_bzero(seed, sizeof(seed));
+	memset(seed, 0, sizeof(seed));
 	
 	// Return signature as a uint8 array
 	return bufferToUint8Array(environment, signature, sizeof(signature));
@@ -2256,14 +2256,14 @@ napi_value createSecretNonce(napi_env environment, napi_callback_info arguments)
 	if(!Secp256k1Zkp::createSecretNonce(instanceData, nonce, seed, sizeof(seed))) {
 	
 		// Clear seed
-		explicit_bzero(seed, sizeof(seed));
+		memset(seed, 0, sizeof(seed));
 	
 		// Return operation failed
 		return OPERATION_FAILED;
 	}
 	
 	// Clear seed
-	explicit_bzero(seed, sizeof(seed));
+	memset(seed, 0, sizeof(seed));
 	
 	// Return nonce as a uint8 array
 	return bufferToUint8Array(environment, nonce, sizeof(nonce));
@@ -2406,7 +2406,7 @@ napi_value bufferToUint8Array(napi_env environment, uint8_t *data, size_t size) 
 	if(!buffer) {
 	
 		// Clear data
-		explicit_bzero(data, size);
+		memset(data, 0, size);
 	
 		// Return operation failed
 		return OPERATION_FAILED;
@@ -2417,7 +2417,7 @@ napi_value bufferToUint8Array(napi_env environment, uint8_t *data, size_t size) 
 	if(!sizeHint) {
 	
 		// Clear data
-		explicit_bzero(data, size);
+		memset(data, 0, size);
 	
 		// Free memory
 		delete [] buffer;
@@ -2430,7 +2430,7 @@ napi_value bufferToUint8Array(napi_env environment, uint8_t *data, size_t size) 
 	memcpy(buffer, data, size);
 	
 	// Clear data
-	explicit_bzero(data, size);
+	memset(data, 0, size);
 	
 	// Check if creating array buffer from data failed
 	napi_value arrayBuffer;
@@ -2443,7 +2443,7 @@ napi_value bufferToUint8Array(napi_env environment, uint8_t *data, size_t size) 
 		const size_t *sizeHint = static_cast<size_t *>(finalizeHint);
 		
 		// Clear buffer
-		explicit_bzero(buffer, *sizeHint);
+		memset(buffer, 0, *sizeHint);
 		
 		// Free memory
 		delete [] buffer;
@@ -2452,7 +2452,7 @@ napi_value bufferToUint8Array(napi_env environment, uint8_t *data, size_t size) 
 	}, sizeHint, &arrayBuffer) != napi_ok) {
 	
 		// Clear buffer
-		explicit_bzero(buffer, size);
+		memset(buffer, 0, size);
 	
 		// Free memory
 		delete [] buffer;
@@ -2467,7 +2467,7 @@ napi_value bufferToUint8Array(napi_env environment, uint8_t *data, size_t size) 
 	if(napi_create_typedarray(environment, napi_uint8_array, size, arrayBuffer, 0, &uint8Array) != napi_ok) {
 	
 		// Clear buffer
-		explicit_bzero(buffer, size);
+		memset(buffer, 0, size);
 	
 		// Free memory
 		delete [] buffer;
@@ -2508,7 +2508,8 @@ tuple<string, bool> stringToCString(napi_env environment, napi_value value) {
 	}
 	
 	// Check if getting the string failed
-	char result[size + sizeof('\0')] = {};
+	char result[size + sizeof('\0')];
+	memset(result, 0, sizeof(result));
 	if(napi_get_value_string_utf8(environment, value, result, sizeof(result), nullptr) != napi_ok) {
 	
 		// Return failure
@@ -2561,7 +2562,7 @@ bool randomFill(napi_env environment, uint8_t *buffer, size_t size) {
 	memcpy(buffer, data, size);
 	
 	// Clear data
-	explicit_bzero(data, size);
+	memset(data, 0, size);
 	
 	// Return true
 	return true;
