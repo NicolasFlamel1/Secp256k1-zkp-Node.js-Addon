@@ -551,8 +551,8 @@ napi_value blindSwitch(napi_env environment, napi_callback_info arguments) {
 
 	// Check if not enough arguments were provided
 	size_t argc = 2;
-	napi_value argv[argc];
-	if(napi_get_cb_info(environment, arguments, &argc, argv, nullptr, nullptr) != napi_ok || argc != sizeof(argv) / sizeof(argv[0])) {
+	vector<napi_value> argv(argc);
+	if(napi_get_cb_info(environment, arguments, &argc, argv.data(), nullptr, nullptr) != napi_ok || argc != argv.size()) {
 	
 		// Return operation failed
 		return OPERATION_FAILED;
@@ -575,15 +575,15 @@ napi_value blindSwitch(napi_env environment, napi_callback_info arguments) {
 	}
 	
 	// Check if performing blind switch failed
-	uint8_t result[Secp256k1Zkp::blindSize(instanceData)];
-	if(!Secp256k1Zkp::blindSwitch(instanceData, result, get<0>(blind), get<1>(blind), get<0>(value).c_str())) {
+	vector<uint8_t> result(Secp256k1Zkp::blindSize(instanceData));
+	if(!Secp256k1Zkp::blindSwitch(instanceData, result.data(), get<0>(blind), get<1>(blind), get<0>(value).c_str())) {
 	
 		// Return operation failed
 		return OPERATION_FAILED;
 	}
 	
 	// Return result as a uint8 array
-	return bufferToUint8Array(environment, result, sizeof(result));
+	return bufferToUint8Array(environment, result.data(), result.size());
 }
 
 // Blind sum
@@ -599,8 +599,8 @@ napi_value blindSum(napi_env environment, napi_callback_info arguments) {
 	
 	// Check if not enough arguments were provided
 	size_t argc = 2;
-	napi_value argv[argc];
-	if(napi_get_cb_info(environment, arguments, &argc, argv, nullptr, nullptr) != napi_ok || argc != sizeof(argv) / sizeof(argv[0])) {
+	vector<napi_value> argv(argc);
+	if(napi_get_cb_info(environment, arguments, &argc, argv.data(), nullptr, nullptr) != napi_ok || argc != argv.size()) {
 	
 		// Return operation failed
 		return OPERATION_FAILED;
@@ -625,7 +625,7 @@ napi_value blindSum(napi_env environment, napi_callback_info arguments) {
 	
 	// Initialize blinds and blinds sizes
 	vector<uint8_t> blinds;
-	size_t blindsSizes[numberOfPositiveBlinds + numberOfNegativeBlinds];
+	vector<size_t> blindsSizes(numberOfPositiveBlinds + numberOfNegativeBlinds);
 	
 	// Go through all positive blinds
 	for(uint32_t i = 0; i < numberOfPositiveBlinds; ++i) {
@@ -692,8 +692,8 @@ napi_value blindSum(napi_env environment, napi_callback_info arguments) {
 	}
 	
 	// Check if performing blind sum failed
-	uint8_t result[Secp256k1Zkp::blindSize(instanceData)];
-	if(!Secp256k1Zkp::blindSum(instanceData, result, blinds.data(), blindsSizes, numberOfPositiveBlinds + numberOfNegativeBlinds, numberOfPositiveBlinds)) {
+	vector<uint8_t> result(Secp256k1Zkp::blindSize(instanceData));
+	if(!Secp256k1Zkp::blindSum(instanceData, result.data(), blinds.data(), blindsSizes.data(), numberOfPositiveBlinds + numberOfNegativeBlinds, numberOfPositiveBlinds)) {
 	
 		// Clear blinds
 		memset(blinds.data(), 0, blinds.size());
@@ -706,7 +706,7 @@ napi_value blindSum(napi_env environment, napi_callback_info arguments) {
 	memset(blinds.data(), 0, blinds.size());
 	
 	// Return result as a uint8 array
-	return bufferToUint8Array(environment, result, sizeof(result));
+	return bufferToUint8Array(environment, result.data(), result.size());
 }
 
 // Is valid secret key
@@ -722,8 +722,8 @@ napi_value isValidSecretKey(napi_env environment, napi_callback_info arguments) 
 
 	// Check if not enough arguments were provided
 	size_t argc = 1;
-	napi_value argv[argc];
-	if(napi_get_cb_info(environment, arguments, &argc, argv, nullptr, nullptr) != napi_ok || argc != sizeof(argv) / sizeof(argv[0])) {
+	vector<napi_value> argv(argc);
+	if(napi_get_cb_info(environment, arguments, &argc, argv.data(), nullptr, nullptr) != napi_ok || argc != argv.size()) {
 	
 		// Return false as a bool
 		return cBoolToBool(environment, false);
@@ -761,8 +761,8 @@ napi_value isValidPublicKey(napi_env environment, napi_callback_info arguments) 
 
 	// Check if not enough arguments were provided
 	size_t argc = 1;
-	napi_value argv[argc];
-	if(napi_get_cb_info(environment, arguments, &argc, argv, nullptr, nullptr) != napi_ok || argc != sizeof(argv) / sizeof(argv[0])) {
+	vector<napi_value> argv(argc);
+	if(napi_get_cb_info(environment, arguments, &argc, argv.data(), nullptr, nullptr) != napi_ok || argc != argv.size()) {
 	
 		// Return false as a bool
 		return cBoolToBool(environment, false);
@@ -800,8 +800,8 @@ napi_value isValidCommit(napi_env environment, napi_callback_info arguments) {
 
 	// Check if not enough arguments were provided
 	size_t argc = 1;
-	napi_value argv[argc];
-	if(napi_get_cb_info(environment, arguments, &argc, argv, nullptr, nullptr) != napi_ok || argc != sizeof(argv) / sizeof(argv[0])) {
+	vector<napi_value> argv(argc);
+	if(napi_get_cb_info(environment, arguments, &argc, argv.data(), nullptr, nullptr) != napi_ok || argc != argv.size()) {
 	
 		// Return false as a bool
 		return cBoolToBool(environment, false);
@@ -839,8 +839,8 @@ napi_value isValidSingleSignerSignature(napi_env environment, napi_callback_info
 
 	// Check if not enough arguments were provided
 	size_t argc = 1;
-	napi_value argv[argc];
-	if(napi_get_cb_info(environment, arguments, &argc, argv, nullptr, nullptr) != napi_ok || argc != sizeof(argv) / sizeof(argv[0])) {
+	vector<napi_value> argv(argc);
+	if(napi_get_cb_info(environment, arguments, &argc, argv.data(), nullptr, nullptr) != napi_ok || argc != argv.size()) {
 	
 		// Return false as a bool
 		return cBoolToBool(environment, false);
@@ -878,8 +878,8 @@ napi_value createBulletproof(napi_env environment, napi_callback_info arguments)
 
 	// Check if not enough arguments were provided
 	size_t argc = 6;
-	napi_value argv[argc];
-	if(napi_get_cb_info(environment, arguments, &argc, argv, nullptr, nullptr) != napi_ok || argc != sizeof(argv) / sizeof(argv[0])) {
+	vector<napi_value> argv(argc);
+	if(napi_get_cb_info(environment, arguments, &argc, argv.data(), nullptr, nullptr) != napi_ok || argc != argv.size()) {
 	
 		// Return operation failed
 		return OPERATION_FAILED;
@@ -934,16 +934,16 @@ napi_value createBulletproof(napi_env environment, napi_callback_info arguments)
 	}
 	
 	// Check if creating bulletproof failed
-	uint8_t proof[Secp256k1Zkp::bulletproofProofSize(instanceData)];
+	vector<uint8_t> proof(Secp256k1Zkp::bulletproofProofSize(instanceData));
 	char proofSize[MAX_64_BIT_INTEGER_STRING_LENGTH];
-	if(!Secp256k1Zkp::createBulletproof(instanceData, proof, proofSize, get<0>(blind), get<1>(blind), get<0>(value).c_str(), get<0>(nonce), get<1>(nonce), get<0>(privateNonce), get<1>(privateNonce), get<0>(extraCommit), get<1>(extraCommit), get<0>(message), get<1>(message))) {
+	if(!Secp256k1Zkp::createBulletproof(instanceData, proof.data(), proofSize, get<0>(blind), get<1>(blind), get<0>(value).c_str(), get<0>(nonce), get<1>(nonce), get<0>(privateNonce), get<1>(privateNonce), get<0>(extraCommit), get<1>(extraCommit), get<0>(message), get<1>(message))) {
 	
 		// Return operation failed
 		return OPERATION_FAILED;
 	}
 	
 	// Return proof as a uint8 array
-	return bufferToUint8Array(environment, proof, strtoull(proofSize, nullptr, 10));
+	return bufferToUint8Array(environment, proof.data(), strtoull(proofSize, nullptr, 10));
 }
 
 // Create bulletproof blindless
@@ -959,8 +959,8 @@ napi_value createBulletproofBlindless(napi_env environment, napi_callback_info a
 
 	// Check if not enough arguments were provided
 	size_t argc = 8;
-	napi_value argv[argc];
-	if(napi_get_cb_info(environment, arguments, &argc, argv, nullptr, nullptr) != napi_ok || argc != sizeof(argv) / sizeof(argv[0])) {
+	vector<napi_value> argv(argc);
+	if(napi_get_cb_info(environment, arguments, &argc, argv.data(), nullptr, nullptr) != napi_ok || argc != argv.size()) {
 	
 		// Return operation failed
 		return OPERATION_FAILED;
@@ -1031,16 +1031,16 @@ napi_value createBulletproofBlindless(napi_env environment, napi_callback_info a
 	}
 	
 	// Check if creating bulletproof blindless failed
-	uint8_t proof[Secp256k1Zkp::bulletproofProofSize(instanceData)];
+	vector<uint8_t> proof(Secp256k1Zkp::bulletproofProofSize(instanceData));
 	char proofSize[MAX_64_BIT_INTEGER_STRING_LENGTH];
-	if(!Secp256k1Zkp::createBulletproofBlindless(instanceData, proof, proofSize, get<0>(tauX), get<1>(tauX), get<0>(tOne), get<1>(tOne), get<0>(tTwo), get<1>(tTwo), get<0>(commit), get<1>(commit), get<0>(value).c_str(), get<0>(nonce), get<1>(nonce), get<0>(extraCommit), get<1>(extraCommit), get<0>(message), get<1>(message))) {
+	if(!Secp256k1Zkp::createBulletproofBlindless(instanceData, proof.data(), proofSize, get<0>(tauX), get<1>(tauX), get<0>(tOne), get<1>(tOne), get<0>(tTwo), get<1>(tTwo), get<0>(commit), get<1>(commit), get<0>(value).c_str(), get<0>(nonce), get<1>(nonce), get<0>(extraCommit), get<1>(extraCommit), get<0>(message), get<1>(message))) {
 	
 		// Return operation failed
 		return OPERATION_FAILED;
 	}
 	
 	// Return proof as a uint8 array
-	return bufferToUint8Array(environment, proof, strtoull(proofSize, nullptr, 10));
+	return bufferToUint8Array(environment, proof.data(), strtoull(proofSize, nullptr, 10));
 }
 
 // Rewind bulletproof
@@ -1056,8 +1056,8 @@ napi_value rewindBulletproof(napi_env environment, napi_callback_info arguments)
 
 	// Check if not enough arguments were provided
 	size_t argc = 3;
-	napi_value argv[argc];
-	if(napi_get_cb_info(environment, arguments, &argc, argv, nullptr, nullptr) != napi_ok || argc != sizeof(argv) / sizeof(argv[0])) {
+	vector<napi_value> argv(argc);
+	if(napi_get_cb_info(environment, arguments, &argc, argv.data(), nullptr, nullptr) != napi_ok || argc != argv.size()) {
 	
 		// Return operation failed
 		return OPERATION_FAILED;
@@ -1089,9 +1089,9 @@ napi_value rewindBulletproof(napi_env environment, napi_callback_info arguments)
 	
 	// Check if performing rewind bulletproof failed
 	char value[MAX_64_BIT_INTEGER_STRING_LENGTH];
-	uint8_t blind[Secp256k1Zkp::blindSize(instanceData)];
-	uint8_t message[Secp256k1Zkp::bulletproofMessageSize(instanceData)];
-	if(!Secp256k1Zkp::rewindBulletproof(instanceData, value, blind, message, get<0>(proof), get<1>(proof), get<0>(commit), get<1>(commit), get<0>(nonce), get<1>(nonce))) {
+	vector<uint8_t> blind(Secp256k1Zkp::blindSize(instanceData));
+	vector<uint8_t> message(Secp256k1Zkp::bulletproofMessageSize(instanceData));
+	if(!Secp256k1Zkp::rewindBulletproof(instanceData, value, blind.data(), message.data(), get<0>(proof), get<1>(proof), get<0>(commit), get<1>(commit), get<0>(nonce), get<1>(nonce))) {
 	
 		// Return operation failed
 		return OPERATION_FAILED;
@@ -1114,7 +1114,7 @@ napi_value rewindBulletproof(napi_env environment, napi_callback_info arguments)
 	}
 	
 	// Check if adding blind to result failed
-	const napi_value uint8ArrayBlind = bufferToUint8Array(environment, blind, sizeof(blind));
+	const napi_value uint8ArrayBlind = bufferToUint8Array(environment, blind.data(), blind.size());
 	if(isNull(environment, uint8ArrayBlind) || napi_set_named_property(environment, result, "Blind", uint8ArrayBlind) != napi_ok) {
 	
 		// Return operation failed
@@ -1122,7 +1122,7 @@ napi_value rewindBulletproof(napi_env environment, napi_callback_info arguments)
 	}
 	
 	// Check if adding message to result failed
-	const napi_value uint8ArrayMessage = bufferToUint8Array(environment, message, sizeof(message));
+	const napi_value uint8ArrayMessage = bufferToUint8Array(environment, message.data(), message.size());
 	if(isNull(environment, uint8ArrayMessage) || napi_set_named_property(environment, result, "Message", uint8ArrayMessage) != napi_ok) {
 	
 		// Return operation failed
@@ -1146,8 +1146,8 @@ napi_value verifyBulletproof(napi_env environment, napi_callback_info arguments)
 
 	// Check if not enough arguments were provided
 	size_t argc = 3;
-	napi_value argv[argc];
-	if(napi_get_cb_info(environment, arguments, &argc, argv, nullptr, nullptr) != napi_ok || argc != sizeof(argv) / sizeof(argv[0])) {
+	vector<napi_value> argv(argc);
+	if(napi_get_cb_info(environment, arguments, &argc, argv.data(), nullptr, nullptr) != napi_ok || argc != argv.size()) {
 	
 		// Return false as a bool
 		return cBoolToBool(environment, false);
@@ -1201,8 +1201,8 @@ napi_value publicKeyFromSecretKey(napi_env environment, napi_callback_info argum
 
 	// Check if not enough arguments were provided
 	size_t argc = 1;
-	napi_value argv[argc];
-	if(napi_get_cb_info(environment, arguments, &argc, argv, nullptr, nullptr) != napi_ok || argc != sizeof(argv) / sizeof(argv[0])) {
+	vector<napi_value> argv(argc);
+	if(napi_get_cb_info(environment, arguments, &argc, argv.data(), nullptr, nullptr) != napi_ok || argc != argv.size()) {
 	
 		// Return operation failed
 		return OPERATION_FAILED;
@@ -1217,15 +1217,15 @@ napi_value publicKeyFromSecretKey(napi_env environment, napi_callback_info argum
 	}
 	
 	// Check if getting public key from secret key failed
-	uint8_t publicKey[Secp256k1Zkp::publicKeySize(instanceData)];
-	if(!Secp256k1Zkp::publicKeyFromSecretKey(instanceData, publicKey, get<0>(secretKey), get<1>(secretKey))) {
+	vector<uint8_t> publicKey(Secp256k1Zkp::publicKeySize(instanceData));
+	if(!Secp256k1Zkp::publicKeyFromSecretKey(instanceData, publicKey.data(), get<0>(secretKey), get<1>(secretKey))) {
 	
 		// Return operation failed
 		return OPERATION_FAILED;
 	}
 	
 	// Return public key as a uint8 array
-	return bufferToUint8Array(environment, publicKey, sizeof(publicKey));
+	return bufferToUint8Array(environment, publicKey.data(), publicKey.size());
 }
 
 // Public key from data
@@ -1241,8 +1241,8 @@ napi_value publicKeyFromData(napi_env environment, napi_callback_info arguments)
 
 	// Check if not enough arguments were provided
 	size_t argc = 1;
-	napi_value argv[argc];
-	if(napi_get_cb_info(environment, arguments, &argc, argv, nullptr, nullptr) != napi_ok || argc != sizeof(argv) / sizeof(argv[0])) {
+	vector<napi_value> argv(argc);
+	if(napi_get_cb_info(environment, arguments, &argc, argv.data(), nullptr, nullptr) != napi_ok || argc != argv.size()) {
 	
 		// Return operation failed
 		return OPERATION_FAILED;
@@ -1257,15 +1257,15 @@ napi_value publicKeyFromData(napi_env environment, napi_callback_info arguments)
 	}
 	
 	// Check if getting public key from data failed
-	uint8_t publicKey[Secp256k1Zkp::publicKeySize(instanceData)];
-	if(!Secp256k1Zkp::publicKeyFromData(instanceData, publicKey, get<0>(data), get<1>(data))) {
+	vector<uint8_t> publicKey(Secp256k1Zkp::publicKeySize(instanceData));
+	if(!Secp256k1Zkp::publicKeyFromData(instanceData, publicKey.data(), get<0>(data), get<1>(data))) {
 	
 		// Return operation failed
 		return OPERATION_FAILED;
 	}
 	
 	// Return public key as a uint8 array
-	return bufferToUint8Array(environment, publicKey, sizeof(publicKey));
+	return bufferToUint8Array(environment, publicKey.data(), publicKey.size());
 }
 
 // Uncompress public key
@@ -1281,8 +1281,8 @@ napi_value uncompressPublicKey(napi_env environment, napi_callback_info argument
 
 	// Check if not enough arguments were provided
 	size_t argc = 1;
-	napi_value argv[argc];
-	if(napi_get_cb_info(environment, arguments, &argc, argv, nullptr, nullptr) != napi_ok || argc != sizeof(argv) / sizeof(argv[0])) {
+	vector<napi_value> argv(argc);
+	if(napi_get_cb_info(environment, arguments, &argc, argv.data(), nullptr, nullptr) != napi_ok || argc != argv.size()) {
 	
 		// Return operation failed
 		return OPERATION_FAILED;
@@ -1297,15 +1297,15 @@ napi_value uncompressPublicKey(napi_env environment, napi_callback_info argument
 	}
 	
 	// Check if uncompressing the public key failed
-	uint8_t uncompressedPublicKey[Secp256k1Zkp::uncompressedPublicKeySize(instanceData)];
-	if(!Secp256k1Zkp::uncompressPublicKey(instanceData, uncompressedPublicKey, get<0>(publicKey), get<1>(publicKey))) {
+	vector<uint8_t> uncompressedPublicKey(Secp256k1Zkp::uncompressedPublicKeySize(instanceData));
+	if(!Secp256k1Zkp::uncompressPublicKey(instanceData, uncompressedPublicKey.data(), get<0>(publicKey), get<1>(publicKey))) {
 	
 		// Return operation failed
 		return OPERATION_FAILED;
 	}
 	
 	// Return uncompressed public key as a uint8 array
-	return bufferToUint8Array(environment, uncompressedPublicKey, sizeof(uncompressedPublicKey));
+	return bufferToUint8Array(environment, uncompressedPublicKey.data(), uncompressedPublicKey.size());
 }
 
 // Secret key tweak add
@@ -1321,8 +1321,8 @@ napi_value secretKeyTweakAdd(napi_env environment, napi_callback_info arguments)
 
 	// Check if not enough arguments were provided
 	size_t argc = 2;
-	napi_value argv[argc];
-	if(napi_get_cb_info(environment, arguments, &argc, argv, nullptr, nullptr) != napi_ok || argc != sizeof(argv) / sizeof(argv[0])) {
+	vector<napi_value> argv(argc);
+	if(napi_get_cb_info(environment, arguments, &argc, argv.data(), nullptr, nullptr) != napi_ok || argc != argv.size()) {
 	
 		// Return operation failed
 		return OPERATION_FAILED;
@@ -1368,8 +1368,8 @@ napi_value publicKeyTweakAdd(napi_env environment, napi_callback_info arguments)
 
 	// Check if not enough arguments were provided
 	size_t argc = 2;
-	napi_value argv[argc];
-	if(napi_get_cb_info(environment, arguments, &argc, argv, nullptr, nullptr) != napi_ok || argc != sizeof(argv) / sizeof(argv[0])) {
+	vector<napi_value> argv(argc);
+	if(napi_get_cb_info(environment, arguments, &argc, argv.data(), nullptr, nullptr) != napi_ok || argc != argv.size()) {
 	
 		// Return operation failed
 		return OPERATION_FAILED;
@@ -1415,8 +1415,8 @@ napi_value secretKeyTweakMultiply(napi_env environment, napi_callback_info argum
 
 	// Check if not enough arguments were provided
 	size_t argc = 2;
-	napi_value argv[argc];
-	if(napi_get_cb_info(environment, arguments, &argc, argv, nullptr, nullptr) != napi_ok || argc != sizeof(argv) / sizeof(argv[0])) {
+	vector<napi_value> argv(argc);
+	if(napi_get_cb_info(environment, arguments, &argc, argv.data(), nullptr, nullptr) != napi_ok || argc != argv.size()) {
 	
 		// Return operation failed
 		return OPERATION_FAILED;
@@ -1462,8 +1462,8 @@ napi_value publicKeyTweakMultiply(napi_env environment, napi_callback_info argum
 
 	// Check if not enough arguments were provided
 	size_t argc = 2;
-	napi_value argv[argc];
-	if(napi_get_cb_info(environment, arguments, &argc, argv, nullptr, nullptr) != napi_ok || argc != sizeof(argv) / sizeof(argv[0])) {
+	vector<napi_value> argv(argc);
+	if(napi_get_cb_info(environment, arguments, &argc, argv.data(), nullptr, nullptr) != napi_ok || argc != argv.size()) {
 	
 		// Return operation failed
 		return OPERATION_FAILED;
@@ -1509,8 +1509,8 @@ napi_value sharedSecretKeyFromSecretKeyAndPublicKey(napi_env environment, napi_c
 
 	// Check if not enough arguments were provided
 	size_t argc = 2;
-	napi_value argv[argc];
-	if(napi_get_cb_info(environment, arguments, &argc, argv, nullptr, nullptr) != napi_ok || argc != sizeof(argv) / sizeof(argv[0])) {
+	vector<napi_value> argv(argc);
+	if(napi_get_cb_info(environment, arguments, &argc, argv.data(), nullptr, nullptr) != napi_ok || argc != argv.size()) {
 	
 		// Return operation failed
 		return OPERATION_FAILED;
@@ -1533,15 +1533,15 @@ napi_value sharedSecretKeyFromSecretKeyAndPublicKey(napi_env environment, napi_c
 	}
 	
 	// Check if getting shared secret key from secret key and public key failed
-	uint8_t sharedSecretKey[Secp256k1Zkp::secretKeySize(instanceData)];
-	if(!Secp256k1Zkp::sharedSecretKeyFromSecretKeyAndPublicKey(instanceData, sharedSecretKey, get<0>(secretKey), get<1>(secretKey), get<0>(publicKey), get<1>(publicKey))) {
+	vector<uint8_t> sharedSecretKey(Secp256k1Zkp::secretKeySize(instanceData));
+	if(!Secp256k1Zkp::sharedSecretKeyFromSecretKeyAndPublicKey(instanceData, sharedSecretKey.data(), get<0>(secretKey), get<1>(secretKey), get<0>(publicKey), get<1>(publicKey))) {
 	
 		// Return operation failed
 		return OPERATION_FAILED;
 	}
 	
 	// Return shared secret key as a uint8 array
-	return bufferToUint8Array(environment, sharedSecretKey, sizeof(sharedSecretKey));
+	return bufferToUint8Array(environment, sharedSecretKey.data(), sharedSecretKey.size());
 }
 
 // Pedersen commit
@@ -1557,8 +1557,8 @@ napi_value pedersenCommit(napi_env environment, napi_callback_info arguments) {
 
 	// Check if not enough arguments were provided
 	size_t argc = 2;
-	napi_value argv[argc];
-	if(napi_get_cb_info(environment, arguments, &argc, argv, nullptr, nullptr) != napi_ok || argc != sizeof(argv) / sizeof(argv[0])) {
+	vector<napi_value> argv(argc);
+	if(napi_get_cb_info(environment, arguments, &argc, argv.data(), nullptr, nullptr) != napi_ok || argc != argv.size()) {
 	
 		// Return operation failed
 		return OPERATION_FAILED;
@@ -1581,15 +1581,15 @@ napi_value pedersenCommit(napi_env environment, napi_callback_info arguments) {
 	}
 	
 	// Check if performing Pedersen commit failed
-	uint8_t result[Secp256k1Zkp::commitSize(instanceData)];
-	if(!Secp256k1Zkp::pedersenCommit(instanceData, result, get<0>(blind), get<1>(blind), get<0>(value).c_str())) {
+	vector<uint8_t> result(Secp256k1Zkp::commitSize(instanceData));
+	if(!Secp256k1Zkp::pedersenCommit(instanceData, result.data(), get<0>(blind), get<1>(blind), get<0>(value).c_str())) {
 	
 		// Return operation failed
 		return OPERATION_FAILED;
 	}
 	
 	// Return result as a uint8 array
-	return bufferToUint8Array(environment, result, sizeof(result));
+	return bufferToUint8Array(environment, result.data(), result.size());
 }
 
 // Pedersen commit sum
@@ -1605,8 +1605,8 @@ napi_value pedersenCommitSum(napi_env environment, napi_callback_info arguments)
 	
 	// Check if not enough arguments were provided
 	size_t argc = 2;
-	napi_value argv[argc];
-	if(napi_get_cb_info(environment, arguments, &argc, argv, nullptr, nullptr) != napi_ok || argc != sizeof(argv) / sizeof(argv[0])) {
+	vector<napi_value> argv(argc);
+	if(napi_get_cb_info(environment, arguments, &argc, argv.data(), nullptr, nullptr) != napi_ok || argc != argv.size()) {
 	
 		// Return operation failed
 		return OPERATION_FAILED;
@@ -1623,7 +1623,7 @@ napi_value pedersenCommitSum(napi_env environment, napi_callback_info arguments)
 	
 	// Initialize positive commits and positive commits sizes
 	vector<uint8_t> positiveCommits;
-	size_t positiveCommitsSizes[numberOfPositiveCommits];
+	vector<size_t> positiveCommitsSizes(numberOfPositiveCommits);
 	
 	// Go through all positive commits
 	for(uint32_t i = 0; i < numberOfPositiveCommits; ++i) {
@@ -1661,7 +1661,7 @@ napi_value pedersenCommitSum(napi_env environment, napi_callback_info arguments)
 	
 	// Initialize negative commits and negative commits sizes
 	vector<uint8_t> negativeCommits;
-	size_t negativeCommitsSizes[numberOfNegativeCommits];
+	vector<size_t> negativeCommitsSizes(numberOfNegativeCommits);
 	
 	// Go through all negative commits
 	for(uint32_t i = 0; i < numberOfNegativeCommits; ++i) {
@@ -1690,15 +1690,15 @@ napi_value pedersenCommitSum(napi_env environment, napi_callback_info arguments)
 	}
 	
 	// Check if performing Pedersen commit sum failed
-	uint8_t result[Secp256k1Zkp::commitSize(instanceData)];
-	if(!Secp256k1Zkp::pedersenCommitSum(instanceData, result, positiveCommits.data(), positiveCommitsSizes, numberOfPositiveCommits, negativeCommits.data(), negativeCommitsSizes, numberOfNegativeCommits)) {
+	vector<uint8_t> result(Secp256k1Zkp::commitSize(instanceData));
+	if(!Secp256k1Zkp::pedersenCommitSum(instanceData, result.data(), positiveCommits.data(), positiveCommitsSizes.data(), numberOfPositiveCommits, negativeCommits.data(), negativeCommitsSizes.data(), numberOfNegativeCommits)) {
 	
 		// Return operation failed
 		return OPERATION_FAILED;
 	}
 	
 	// Return result as a uint8 array
-	return bufferToUint8Array(environment, result, sizeof(result));
+	return bufferToUint8Array(environment, result.data(), result.size());
 }
 
 // Pedersen commit to public key
@@ -1714,8 +1714,8 @@ napi_value pedersenCommitToPublicKey(napi_env environment, napi_callback_info ar
 
 	// Check if not enough arguments were provided
 	size_t argc = 1;
-	napi_value argv[argc];
-	if(napi_get_cb_info(environment, arguments, &argc, argv, nullptr, nullptr) != napi_ok || argc != sizeof(argv) / sizeof(argv[0])) {
+	vector<napi_value> argv(argc);
+	if(napi_get_cb_info(environment, arguments, &argc, argv.data(), nullptr, nullptr) != napi_ok || argc != argv.size()) {
 	
 		// Return operation failed
 		return OPERATION_FAILED;
@@ -1730,15 +1730,15 @@ napi_value pedersenCommitToPublicKey(napi_env environment, napi_callback_info ar
 	}
 	
 	// Check if getting public key from Pedersen commit failed
-	uint8_t publicKey[Secp256k1Zkp::publicKeySize(instanceData)];
-	if(!Secp256k1Zkp::pedersenCommitToPublicKey(instanceData, publicKey, get<0>(commit), get<1>(commit))) {
+	vector<uint8_t> publicKey(Secp256k1Zkp::publicKeySize(instanceData));
+	if(!Secp256k1Zkp::pedersenCommitToPublicKey(instanceData, publicKey.data(), get<0>(commit), get<1>(commit))) {
 	
 		// Return operation failed
 		return OPERATION_FAILED;
 	}
 	
 	// Return public key as a uint8 array
-	return bufferToUint8Array(environment, publicKey, sizeof(publicKey));
+	return bufferToUint8Array(environment, publicKey.data(), publicKey.size());
 }
 
 // Public key to Pedersen commit
@@ -1754,8 +1754,8 @@ napi_value publicKeyToPedersenCommit(napi_env environment, napi_callback_info ar
 
 	// Check if not enough arguments were provided
 	size_t argc = 1;
-	napi_value argv[argc];
-	if(napi_get_cb_info(environment, arguments, &argc, argv, nullptr, nullptr) != napi_ok || argc != sizeof(argv) / sizeof(argv[0])) {
+	vector<napi_value> argv(argc);
+	if(napi_get_cb_info(environment, arguments, &argc, argv.data(), nullptr, nullptr) != napi_ok || argc != argv.size()) {
 	
 		// Return operation failed
 		return OPERATION_FAILED;
@@ -1770,15 +1770,15 @@ napi_value publicKeyToPedersenCommit(napi_env environment, napi_callback_info ar
 	}
 	
 	// Check if getting Pedersen commit from public key failed
-	uint8_t commit[Secp256k1Zkp::commitSize(instanceData)];
-	if(!Secp256k1Zkp::publicKeyToPedersenCommit(instanceData, commit, get<0>(publicKey), get<1>(publicKey))) {
+	vector<uint8_t> commit(Secp256k1Zkp::commitSize(instanceData));
+	if(!Secp256k1Zkp::publicKeyToPedersenCommit(instanceData, commit.data(), get<0>(publicKey), get<1>(publicKey))) {
 	
 		// Return operation failed
 		return OPERATION_FAILED;
 	}
 	
 	// Return commit as a uint8 array
-	return bufferToUint8Array(environment, commit, sizeof(commit));
+	return bufferToUint8Array(environment, commit.data(), commit.size());
 }
 
 // Create single-signer signature
@@ -1794,8 +1794,8 @@ napi_value createSingleSignerSignature(napi_env environment, napi_callback_info 
 
 	// Check if not enough arguments were provided
 	size_t argc = 6;
-	napi_value argv[argc];
-	if(napi_get_cb_info(environment, arguments, &argc, argv, nullptr, nullptr) != napi_ok || argc != sizeof(argv) / sizeof(argv[0])) {
+	vector<napi_value> argv(argc);
+	if(napi_get_cb_info(environment, arguments, &argc, argv.data(), nullptr, nullptr) != napi_ok || argc != argv.size()) {
 	
 		// Return operation failed
 		return OPERATION_FAILED;
@@ -1850,29 +1850,29 @@ napi_value createSingleSignerSignature(napi_env environment, napi_callback_info 
 	}
 	
 	// Check if creating random seed failed
-	uint8_t seed[Secp256k1Zkp::seedSize(instanceData)];
-	if(!randomFill(environment, seed, sizeof(seed))) {
+	vector<uint8_t> seed(Secp256k1Zkp::seedSize(instanceData));
+	if(!randomFill(environment, seed.data(), seed.size())) {
 	
 		// Return operation failed
 		return OPERATION_FAILED;
 	}
 	
 	// Check if creating signle-signer signature failed
-	uint8_t signature[Secp256k1Zkp::singleSignerSignatureSize(instanceData)];
-	if(!Secp256k1Zkp::createSingleSignerSignature(instanceData, signature, get<0>(message), get<1>(message), get<0>(secretKey), get<1>(secretKey), get<0>(secretNonce), get<1>(secretNonce), get<0>(publicKey), get<1>(publicKey), get<0>(publicNonce), get<1>(publicNonce), get<0>(publicNonceTotal), get<1>(publicNonceTotal), seed, sizeof(seed))) {
+	vector<uint8_t> signature(Secp256k1Zkp::singleSignerSignatureSize(instanceData));
+	if(!Secp256k1Zkp::createSingleSignerSignature(instanceData, signature.data(), get<0>(message), get<1>(message), get<0>(secretKey), get<1>(secretKey), get<0>(secretNonce), get<1>(secretNonce), get<0>(publicKey), get<1>(publicKey), get<0>(publicNonce), get<1>(publicNonce), get<0>(publicNonceTotal), get<1>(publicNonceTotal), seed.data(), seed.size())) {
 	
 		// Clear seed
-		memset(seed, 0, sizeof(seed));
+		memset(seed.data(), 0, seed.size());
 		
 		// Return operation failed
 		return OPERATION_FAILED;
 	}
 	
 	// Clear seed
-	memset(seed, 0, sizeof(seed));
+	memset(seed.data(), 0, seed.size());
 	
 	// Return signature as a uint8 array
-	return bufferToUint8Array(environment, signature, sizeof(signature));
+	return bufferToUint8Array(environment, signature.data(), signature.size());
 }
 
 // Add single-signer signatures
@@ -1888,8 +1888,8 @@ napi_value addSingleSignerSignatures(napi_env environment, napi_callback_info ar
 	
 	// Check if not enough arguments were provided
 	size_t argc = 2;
-	napi_value argv[argc];
-	if(napi_get_cb_info(environment, arguments, &argc, argv, nullptr, nullptr) != napi_ok || argc != sizeof(argv) / sizeof(argv[0])) {
+	vector<napi_value> argv(argc);
+	if(napi_get_cb_info(environment, arguments, &argc, argv.data(), nullptr, nullptr) != napi_ok || argc != argv.size()) {
 	
 		// Return operation failed
 		return OPERATION_FAILED;
@@ -1906,7 +1906,7 @@ napi_value addSingleSignerSignatures(napi_env environment, napi_callback_info ar
 	
 	// Initialize signatures and signatures sizes
 	vector<uint8_t> signatures;
-	size_t signaturesSizes[numberOfSignatures];
+	vector<size_t> signaturesSizes(numberOfSignatures);
 	
 	// Go through all signatures
 	for(uint32_t i = 0; i < numberOfSignatures; ++i) {
@@ -1943,15 +1943,15 @@ napi_value addSingleSignerSignatures(napi_env environment, napi_callback_info ar
 	}
 	
 	// Check if adding single-signer signatures failed
-	uint8_t result[Secp256k1Zkp::singleSignerSignatureSize(instanceData)];
-	if(!Secp256k1Zkp::addSingleSignerSignatures(instanceData, result, signatures.data(), signaturesSizes, numberOfSignatures, get<0>(publicNonceTotal), get<1>(publicNonceTotal))) {
+	vector<uint8_t> result(Secp256k1Zkp::singleSignerSignatureSize(instanceData));
+	if(!Secp256k1Zkp::addSingleSignerSignatures(instanceData, result.data(), signatures.data(), signaturesSizes.data(), numberOfSignatures, get<0>(publicNonceTotal), get<1>(publicNonceTotal))) {
 	
 		// Return operation failed
 		return OPERATION_FAILED;
 	}
 	
 	// Return result as a uint8 array
-	return bufferToUint8Array(environment, result, sizeof(result));
+	return bufferToUint8Array(environment, result.data(), result.size());
 }
 
 // Verify single-signer signature
@@ -1967,8 +1967,8 @@ napi_value verifySingleSignerSignature(napi_env environment, napi_callback_info 
 
 	// Check if not enough arguments were provided
 	size_t argc = 6;
-	napi_value argv[argc];
-	if(napi_get_cb_info(environment, arguments, &argc, argv, nullptr, nullptr) != napi_ok || argc != sizeof(argv) / sizeof(argv[0])) {
+	vector<napi_value> argv(argc);
+	if(napi_get_cb_info(environment, arguments, &argc, argv.data(), nullptr, nullptr) != napi_ok || argc != argv.size()) {
 	
 		// Return false as a bool
 		return cBoolToBool(environment, false);
@@ -2046,8 +2046,8 @@ napi_value singleSignerSignatureFromData(napi_env environment, napi_callback_inf
 
 	// Check if not enough arguments were provided
 	size_t argc = 1;
-	napi_value argv[argc];
-	if(napi_get_cb_info(environment, arguments, &argc, argv, nullptr, nullptr) != napi_ok || argc != sizeof(argv) / sizeof(argv[0])) {
+	vector<napi_value> argv(argc);
+	if(napi_get_cb_info(environment, arguments, &argc, argv.data(), nullptr, nullptr) != napi_ok || argc != argv.size()) {
 	
 		// Return operation failed
 		return OPERATION_FAILED;
@@ -2062,15 +2062,15 @@ napi_value singleSignerSignatureFromData(napi_env environment, napi_callback_inf
 	}
 	
 	// Check if getting single-signer signature from data failed
-	uint8_t signature[Secp256k1Zkp::singleSignerSignatureSize(instanceData)];
-	if(!Secp256k1Zkp::singleSignerSignatureFromData(instanceData, signature, get<0>(data), get<1>(data))) {
+	vector<uint8_t> signature(Secp256k1Zkp::singleSignerSignatureSize(instanceData));
+	if(!Secp256k1Zkp::singleSignerSignatureFromData(instanceData, signature.data(), get<0>(data), get<1>(data))) {
 	
 		// Return operation failed
 		return OPERATION_FAILED;
 	}
 	
 	// Return signature as a uint8 array
-	return bufferToUint8Array(environment, signature, sizeof(signature));
+	return bufferToUint8Array(environment, signature.data(), signature.size());
 }
 
 // Compact single-signer signature
@@ -2086,8 +2086,8 @@ napi_value compactSingleSignerSignature(napi_env environment, napi_callback_info
 
 	// Check if not enough arguments were provided
 	size_t argc = 1;
-	napi_value argv[argc];
-	if(napi_get_cb_info(environment, arguments, &argc, argv, nullptr, nullptr) != napi_ok || argc != sizeof(argv) / sizeof(argv[0])) {
+	vector<napi_value> argv(argc);
+	if(napi_get_cb_info(environment, arguments, &argc, argv.data(), nullptr, nullptr) != napi_ok || argc != argv.size()) {
 	
 		// Return operation failed
 		return OPERATION_FAILED;
@@ -2102,15 +2102,15 @@ napi_value compactSingleSignerSignature(napi_env environment, napi_callback_info
 	}
 	
 	// Check if compacting single-signer signature failed
-	uint8_t result[Secp256k1Zkp::singleSignerSignatureSize(instanceData)];
-	if(!Secp256k1Zkp::compactSingleSignerSignature(instanceData, result, get<0>(signature), get<1>(signature))) {
+	vector<uint8_t> result(Secp256k1Zkp::singleSignerSignatureSize(instanceData));
+	if(!Secp256k1Zkp::compactSingleSignerSignature(instanceData, result.data(), get<0>(signature), get<1>(signature))) {
 	
 		// Return operation failed
 		return OPERATION_FAILED;
 	}
 	
 	// Return result as a uint8 array
-	return bufferToUint8Array(environment, result, sizeof(result));
+	return bufferToUint8Array(environment, result.data(),result.size());
 }
 
 // Uncompact single-signer signature
@@ -2126,8 +2126,8 @@ napi_value uncompactSingleSignerSignature(napi_env environment, napi_callback_in
 
 	// Check if not enough arguments were provided
 	size_t argc = 1;
-	napi_value argv[argc];
-	if(napi_get_cb_info(environment, arguments, &argc, argv, nullptr, nullptr) != napi_ok || argc != sizeof(argv) / sizeof(argv[0])) {
+	vector<napi_value> argv(argc);
+	if(napi_get_cb_info(environment, arguments, &argc, argv.data(), nullptr, nullptr) != napi_ok || argc != argv.size()) {
 	
 		// Return operation failed
 		return OPERATION_FAILED;
@@ -2142,15 +2142,15 @@ napi_value uncompactSingleSignerSignature(napi_env environment, napi_callback_in
 	}
 	
 	// Check if uncompacting single-signer signature failed
-	uint8_t result[Secp256k1Zkp::uncompactSingleSignerSignatureSize(instanceData)];
-	if(!Secp256k1Zkp::uncompactSingleSignerSignature(instanceData, result, get<0>(signature), get<1>(signature))) {
+	vector<uint8_t> result(Secp256k1Zkp::uncompactSingleSignerSignatureSize(instanceData));
+	if(!Secp256k1Zkp::uncompactSingleSignerSignature(instanceData, result.data(), get<0>(signature), get<1>(signature))) {
 	
 		// Return operation failed
 		return OPERATION_FAILED;
 	}
 	
 	// Return result as a uint8 array
-	return bufferToUint8Array(environment, result, sizeof(result));
+	return bufferToUint8Array(environment, result.data(), result.size());
 }
 
 // Combine public keys
@@ -2166,8 +2166,8 @@ napi_value combinePublicKeys(napi_env environment, napi_callback_info arguments)
 	
 	// Check if not enough arguments were provided
 	size_t argc = 1;
-	napi_value argv[argc];
-	if(napi_get_cb_info(environment, arguments, &argc, argv, nullptr, nullptr) != napi_ok || argc != sizeof(argv) / sizeof(argv[0])) {
+	vector<napi_value> argv(argc);
+	if(napi_get_cb_info(environment, arguments, &argc, argv.data(), nullptr, nullptr) != napi_ok || argc != argv.size()) {
 	
 		// Return operation failed
 		return OPERATION_FAILED;
@@ -2184,7 +2184,7 @@ napi_value combinePublicKeys(napi_env environment, napi_callback_info arguments)
 	
 	// Initialize public keys and public keys sizes
 	vector<uint8_t> publicKeys;
-	size_t publicKeysSizes[numberOfPublicKeys];
+	vector<size_t> publicKeysSizes(numberOfPublicKeys);
 	
 	// Go through all public keys
 	for(uint32_t i = 0; i < numberOfPublicKeys; ++i) {
@@ -2213,15 +2213,15 @@ napi_value combinePublicKeys(napi_env environment, napi_callback_info arguments)
 	}
 	
 	// Check if combining public keys failed
-	uint8_t result[Secp256k1Zkp::publicKeySize(instanceData)];
-	if(!Secp256k1Zkp::combinePublicKeys(instanceData, result, publicKeys.data(), publicKeysSizes, numberOfPublicKeys)) {
+	vector<uint8_t> result(Secp256k1Zkp::publicKeySize(instanceData));
+	if(!Secp256k1Zkp::combinePublicKeys(instanceData, result.data(), publicKeys.data(), publicKeysSizes.data(), numberOfPublicKeys)) {
 	
 		// Return operation failed
 		return OPERATION_FAILED;
 	}
 	
 	// Return result as a uint8 array
-	return bufferToUint8Array(environment, result, sizeof(result));
+	return bufferToUint8Array(environment, result.data(), result.size());
 }
 
 // Create secret nonce
@@ -2244,29 +2244,29 @@ napi_value createSecretNonce(napi_env environment, napi_callback_info arguments)
 	}
 	
 	// Check if creating random seed failed
-	uint8_t seed[Secp256k1Zkp::seedSize(instanceData)];
-	if(!randomFill(environment, seed, sizeof(seed))) {
+	vector<uint8_t> seed(Secp256k1Zkp::seedSize(instanceData));
+	if(!randomFill(environment, seed.data(), seed.size())) {
 	
 		// Return operation failed
 		return OPERATION_FAILED;
 	}
 	
 	// Check if creating secure nonce failed
-	uint8_t nonce[Secp256k1Zkp::nonceSize(instanceData)];
-	if(!Secp256k1Zkp::createSecretNonce(instanceData, nonce, seed, sizeof(seed))) {
+	vector<uint8_t> nonce(Secp256k1Zkp::nonceSize(instanceData));
+	if(!Secp256k1Zkp::createSecretNonce(instanceData, nonce.data(), seed.data(), seed.size())) {
 	
 		// Clear seed
-		memset(seed, 0, sizeof(seed));
+		memset(seed.data(), 0, seed.size());
 	
 		// Return operation failed
 		return OPERATION_FAILED;
 	}
 	
 	// Clear seed
-	memset(seed, 0, sizeof(seed));
+	memset(seed.data(), 0, seed.size());
 	
 	// Return nonce as a uint8 array
-	return bufferToUint8Array(environment, nonce, sizeof(nonce));
+	return bufferToUint8Array(environment, nonce.data(), nonce.size());
 }
 
 // Create message hash signature
@@ -2282,8 +2282,8 @@ napi_value createMessageHashSignature(napi_env environment, napi_callback_info a
 
 	// Check if not enough arguments were provided
 	size_t argc = 2;
-	napi_value argv[argc];
-	if(napi_get_cb_info(environment, arguments, &argc, argv, nullptr, nullptr) != napi_ok || argc != sizeof(argv) / sizeof(argv[0])) {
+	vector<napi_value> argv(argc);
+	if(napi_get_cb_info(environment, arguments, &argc, argv.data(), nullptr, nullptr) != napi_ok || argc != argv.size()) {
 	
 		// Return operation failed
 		return OPERATION_FAILED;
@@ -2306,16 +2306,16 @@ napi_value createMessageHashSignature(napi_env environment, napi_callback_info a
 	}
 	
 	// Check if creating message hash signature failed
-	uint8_t signature[Secp256k1Zkp::maximumMessageHashSignatureSize(instanceData)];
+	vector<uint8_t> signature(Secp256k1Zkp::maximumMessageHashSignatureSize(instanceData));
 	char signatureSize[MAX_64_BIT_INTEGER_STRING_LENGTH];
-	if(!Secp256k1Zkp::createMessageHashSignature(instanceData, signature, signatureSize, get<0>(messageHash), get<1>(messageHash), get<0>(secretKey), get<1>(secretKey))) {
+	if(!Secp256k1Zkp::createMessageHashSignature(instanceData, signature.data(), signatureSize, get<0>(messageHash), get<1>(messageHash), get<0>(secretKey), get<1>(secretKey))) {
 	
 		// Return operation failed
 		return OPERATION_FAILED;
 	}
 	
 	// Return signature as a uint8 array
-	return bufferToUint8Array(environment, signature, strtoull(signatureSize, nullptr, 10));
+	return bufferToUint8Array(environment, signature.data(), strtoull(signatureSize, nullptr, 10));
 }
 
 // Verify message hash signature
@@ -2331,8 +2331,8 @@ napi_value verifyMessageHashSignature(napi_env environment, napi_callback_info a
 
 	// Check if not enough arguments were provided
 	size_t argc = 3;
-	napi_value argv[argc];
-	if(napi_get_cb_info(environment, arguments, &argc, argv, nullptr, nullptr) != napi_ok || argc != sizeof(argv) / sizeof(argv[0])) {
+	vector<napi_value> argv(argc);
+	if(napi_get_cb_info(environment, arguments, &argc, argv.data(), nullptr, nullptr) != napi_ok || argc != argv.size()) {
 	
 		// Return false as a bool
 		return cBoolToBool(environment, false);
@@ -2508,16 +2508,16 @@ tuple<string, bool> stringToCString(napi_env environment, napi_value value) {
 	}
 	
 	// Check if getting the string failed
-	char result[size + sizeof('\0')];
-	memset(result, 0, sizeof(result));
-	if(napi_get_value_string_utf8(environment, value, result, sizeof(result), nullptr) != napi_ok) {
+	vector<char> result(size + sizeof('\0'));
+	memset(result.data(), 0, result.size());
+	if(napi_get_value_string_utf8(environment, value, result.data(), result.size(), nullptr) != napi_ok) {
 	
 		// Return failure
 		return {"", false};
 	}
 	
 	// Return result
-	return {result, true};
+	return {result.data(), true};
 }
 
 // Random fill
