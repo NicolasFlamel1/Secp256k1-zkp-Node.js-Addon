@@ -1,6 +1,6 @@
 {
 	"name": "@nicolasflamel/secp256k1-zkp-native",
-	"version": "0.0.19",
+	"version": "0.0.20",
 	"description": "Node.js addon for parts of libsecp256k1-zkp",
 	"main": "./index.js",
 	"files": [
