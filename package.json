@@ -1,6 +1,6 @@
 {
 	"name": "@nicolasflamel/secp256k1-zkp-native",
-	"version": "0.0.20",
+	"version": "0.0.21",
 	"description": "Node.js addon for parts of libsecp256k1-zkp",
 	"main": "./index.js",
 	"files": [
@@ -9,7 +9,7 @@
 	],
 	"gypfile": true,
 	"scripts": {
-		"prepublishOnly": "wget \"https://github.com/NicolasFlamel1/secp256k1-zkp/archive/master.zip\" && unzip \"./master.zip\" && rm \"./master.zip\" && find \"./secp256k1-zkp-master/\" -mindepth 1 -maxdepth 1 ! -name \"src\" ! -name \"include\" -exec rm -rf {} + && rm -rf \"./secp256k1-zkp-master/src/asm/\" && rm -rf \"./secp256k1-zkp-master/src/java/\" && wget \"https://github.com/NicolasFlamel1/Secp256k1-zkp-NPM-Package/archive/refs/heads/master.zip\" && unzip \"./master.zip\" && rm \"./master.zip\" && sed -i 's/explicit_bzero(\\(.*\\),/memset(\\1, 0,/g' \"./Secp256k1-zkp-NPM-Package-master/main.cpp\" && sed -i 's/^\\([^\\t\\n].* [a-zA-Z0-9]*(\\)\\(.*)\\)\\(;\\| {\\)/\\1InstanceData *instanceData, \\2\\3/g' \"./Secp256k1-zkp-NPM-Package-master/main.cpp\" && sed -i 's/, )/)/g' \"./Secp256k1-zkp-NPM-Package-master/main.cpp\" && sed -i 's/\\(context\\|scratchSpace\\|generators\\),/instanceData->\\1,/g' \"./Secp256k1-zkp-NPM-Package-master/main.cpp\" && sed -i 's/\\(isValidSecretKey(\\|isZeroArray(\\)\\([^I]\\)/\\1instanceData, \\2/g' \"./Secp256k1-zkp-NPM-Package-master/main.cpp\" && find \"./Secp256k1-zkp-NPM-Package-master/\" -mindepth 1 ! -name \"main.cpp\" -exec rm -rf {} +"
+		"prepublishOnly": "wget \"https://github.com/NicolasFlamel1/secp256k1-zkp/archive/master.zip\" && unzip \"./master.zip\" && rm \"./master.zip\" && cd \"./secp256k1-zkp-master\" && \"./autogen.sh\" && \"./configure\" --enable-endomorphism --enable-ecmult-static-precomputation --enable-module-ecdh --enable-experimental --enable-module-generator --enable-module-commitment --enable-module-bulletproof --enable-module-aggsig --with-bignum=no --with-scalar=32bit --with-field=32bit --with-asm=no --disable-benchmark --disable-tests --disable-exhaustive-tests && make && cd .. && find \"./secp256k1-zkp-master/\" -mindepth 1 -maxdepth 1 ! -name \"src\" ! -name \"include\" -exec rm -rf {} + && rm -rf \"./secp256k1-zkp-master/src/asm/\" \"./secp256k1-zkp-master/src/java/\" \"./secp256k1-zkp-master/src/.deps/\" \"./secp256k1-zkp-master/src/.libs/\" && wget \"https://github.com/NicolasFlamel1/Secp256k1-zkp-NPM-Package/archive/refs/heads/master.zip\" && unzip \"./master.zip\" && rm \"./master.zip\" && sed -i 's/explicit_bzero(\\(.*\\),/memset(\\1, 0,/g' \"./Secp256k1-zkp-NPM-Package-master/main.cpp\" && sed -i 's/^\\([^\\t\\n].* [a-zA-Z0-9]*(\\)\\(.*)\\)\\(;\\| {\\)/\\1InstanceData *instanceData, \\2\\3/g' \"./Secp256k1-zkp-NPM-Package-master/main.cpp\" && sed -i 's/, )/)/g' \"./Secp256k1-zkp-NPM-Package-master/main.cpp\" && sed -i 's/\\(context\\|scratchSpace\\|generators\\),/instanceData->\\1,/g' \"./Secp256k1-zkp-NPM-Package-master/main.cpp\" && sed -i 's/\\(isValidSecretKey(\\|isZeroArray(\\)\\([^I]\\)/\\1instanceData, \\2/g' \"./Secp256k1-zkp-NPM-Package-master/main.cpp\" && find \"./Secp256k1-zkp-NPM-Package-master/\" -mindepth 1 ! -name \"main.cpp\" -exec rm -rf {} +"
 	},
 	"repository": {
 		"type": "git",

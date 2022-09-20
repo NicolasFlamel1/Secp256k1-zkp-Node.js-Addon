@@ -1857,7 +1857,7 @@ napi_value createSingleSignerSignature(napi_env environment, napi_callback_info 
 		return OPERATION_FAILED;
 	}
 	
-	// Check if creating signle-signer signature failed
+	// Check if creating single-signer signature failed
 	vector<uint8_t> signature(Secp256k1Zkp::singleSignerSignatureSize(instanceData));
 	if(!Secp256k1Zkp::createSingleSignerSignature(instanceData, signature.data(), get<0>(message), get<1>(message), get<0>(secretKey), get<1>(secretKey), get<0>(secretNonce), get<1>(secretNonce), get<0>(publicKey), get<1>(publicKey), get<0>(publicNonce), get<1>(publicNonce), get<0>(publicNonceTotal), get<1>(publicNonceTotal), seed.data(), seed.size())) {
 	
@@ -2022,7 +2022,7 @@ napi_value verifySingleSignerSignature(napi_env environment, napi_callback_info 
 		return cBoolToBool(environment, false);
 	}
 	
-	// Check if signle-signer signature isn't verified
+	// Check if single-signer signature isn't verified
 	if(!Secp256k1Zkp::verifySingleSignerSignature(instanceData, get<0>(signature), get<1>(signature), get<0>(message), get<1>(message), get<0>(publicNonce), get<1>(publicNonce), get<0>(publicKey), get<1>(publicKey), get<0>(publicKeyTotal), get<1>(publicKeyTotal), isPartial)) {
 	
 		// Return false as a bool

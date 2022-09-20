@@ -7,7 +7,6 @@
 				"./secp256k1-zkp-master/src/secp256k1.c"
 			],
 			"include_dirs": [
-				"./",
 				"./secp256k1-zkp-master/",
 				"./secp256k1-zkp-master/src/",
 				"./secp256k1-zkp-master/include/"
