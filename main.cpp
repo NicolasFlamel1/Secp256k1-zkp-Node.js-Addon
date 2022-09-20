@@ -1345,14 +1345,15 @@ napi_value secretKeyTweakAdd(napi_env environment, napi_callback_info arguments)
 	}
 	
 	// Check if performing secret key tweak add failed
-	if(!Secp256k1Zkp::secretKeyTweakAdd(instanceData, get<0>(secretKey), get<1>(secretKey), get<0>(tweak), get<1>(tweak))) {
+	vector<uint8_t> result(Secp256k1Zkp::secretKeySize(instanceData));
+	if(!Secp256k1Zkp::secretKeyTweakAdd(instanceData, result.data(), get<0>(secretKey), get<1>(secretKey), get<0>(tweak), get<1>(tweak))) {
 	
 		// Return operation failed
 		return OPERATION_FAILED;
 	}
 	
-	// Return secret key as a uint8 array
-	return bufferToUint8Array(environment, get<0>(secretKey), get<1>(secretKey));
+	// Return result as a uint8 array
+	return bufferToUint8Array(environment, result.data(), result.size());
 }
 
 // Public key tweak add
@@ -1392,14 +1393,15 @@ napi_value publicKeyTweakAdd(napi_env environment, napi_callback_info arguments)
 	}
 	
 	// Check if performing public key tweak add failed
-	if(!Secp256k1Zkp::publicKeyTweakAdd(instanceData, get<0>(publicKey), get<1>(publicKey), get<0>(tweak), get<1>(tweak))) {
+	vector<uint8_t> result(Secp256k1Zkp::publicKeySize(instanceData));
+	if(!Secp256k1Zkp::publicKeyTweakAdd(instanceData, result.data(), get<0>(publicKey), get<1>(publicKey), get<0>(tweak), get<1>(tweak))) {
 	
 		// Return operation failed
 		return OPERATION_FAILED;
 	}
 	
-	// Return public key as a uint8 array
-	return bufferToUint8Array(environment, get<0>(publicKey), get<1>(publicKey));
+	// Return result as a uint8 array
+	return bufferToUint8Array(environment, result.data(), result.size());
 }
 
 // Secret key tweak multiply
@@ -1439,14 +1441,15 @@ napi_value secretKeyTweakMultiply(napi_env environment, napi_callback_info argum
 	}
 	
 	// Check if performing secret key tweak multiply failed
-	if(!Secp256k1Zkp::secretKeyTweakMultiply(instanceData, get<0>(secretKey), get<1>(secretKey), get<0>(tweak), get<1>(tweak))) {
+	vector<uint8_t> result(Secp256k1Zkp::secretKeySize(instanceData));
+	if(!Secp256k1Zkp::secretKeyTweakMultiply(instanceData, result.data(), get<0>(secretKey), get<1>(secretKey), get<0>(tweak), get<1>(tweak))) {
 	
 		// Return operation failed
 		return OPERATION_FAILED;
 	}
 	
-	// Return secret key as a uint8 array
-	return bufferToUint8Array(environment, get<0>(secretKey), get<1>(secretKey));
+	// Return result as a uint8 array
+	return bufferToUint8Array(environment, result.data(), result.size());
 }
 
 // Public key tweak multiply
@@ -1486,14 +1489,15 @@ napi_value publicKeyTweakMultiply(napi_env environment, napi_callback_info argum
 	}
 	
 	// Check if performing public key tweak multiply failed
-	if(!Secp256k1Zkp::publicKeyTweakMultiply(instanceData, get<0>(publicKey), get<1>(publicKey), get<0>(tweak), get<1>(tweak))) {
+	vector<uint8_t> result(Secp256k1Zkp::publicKeySize(instanceData));
+	if(!Secp256k1Zkp::publicKeyTweakMultiply(instanceData, result.data(), get<0>(publicKey), get<1>(publicKey), get<0>(tweak), get<1>(tweak))) {
 	
 		// Return operation failed
 		return OPERATION_FAILED;
 	}
 	
-	// Return public key as a uint8 array
-	return bufferToUint8Array(environment, get<0>(publicKey), get<1>(publicKey));
+	// Return result as a uint8 array
+	return bufferToUint8Array(environment, result.data(), result.size());
 }
 
 // Shared secret key from secret key and public key
