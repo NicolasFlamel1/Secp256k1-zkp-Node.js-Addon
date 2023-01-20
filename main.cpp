@@ -508,6 +508,27 @@ InstanceData *getInstanceData(napi_env environment) {
 			// Return nothing
 			return nullptr;
 		}
+		
+		// Check if creating random seed failed
+		vector<uint8_t> seed(Secp256k1Zkp::seedSize(instanceData));
+		if(!randomFill(environment, seed.data(), seed.size())) {
+		
+			// Return nothing
+			return nullptr;
+		}
+		
+		// Check if randomizing context failed
+		if(!secp256k1_context_randomize(instanceData->context, seed.data())) {
+		
+			// Clear seed
+			memset(seed.data(), 0, seed.size());
+		
+			// Return nothing
+			return nullptr;
+		}
+		
+		// Clear seed
+		memset(seed.data(), 0, seed.size());
 	}
 	
 	// Check if instance data's scratch space doesn't exist
