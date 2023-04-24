@@ -2505,7 +2505,7 @@ bool randomFill(napi_env environment, uint8_t *buffer, size_t size) {
 	bool hasProperty;
 	napi_value crypto;
 	napi_value randomFillSync;
-	if(napi_get_global(environment, &global) != napi_ok || napi_has_named_property(environment, global, "crypto", &hasProperty) != napi_ok || !hasProperty || napi_get_named_property(environment, global, "crypto", &crypto) != napi_ok || napi_has_named_property(environment, crypto, "randomFillSync", &hasProperty) != napi_ok || !hasProperty || napi_get_named_property(environment, crypto, "randomFillSync", &randomFillSync) != napi_ok) {
+	if(napi_get_global(environment, &global) != napi_ok || napi_has_named_property(environment, global, "node_crypto", &hasProperty) != napi_ok || !hasProperty || napi_get_named_property(environment, global, "node_crypto", &crypto) != napi_ok || napi_has_named_property(environment, crypto, "randomFillSync", &hasProperty) != napi_ok || !hasProperty || napi_get_named_property(environment, crypto, "randomFillSync", &randomFillSync) != napi_ok) {
 	
 		// Return false
 		return false;
